@@ -20,6 +20,7 @@
   let biographyPage = 0;
   let mobileRoutePage = 0, mobileRolePage = 0, mobileGenealogyPage = 0, mobileEndingPage = 0;
   let genealogySheet = 0;
+  let genealogyMode = 'guide', genealogyGuide = 0;
   let genealogyPerson = window.Genealogy.sheets[0].defaultPerson;
   const genealogyExpanded = {};
   const genealogyExpansion = () => genealogyExpanded[genealogySheet] ||= window.Genealogy.initialPaths(genealogySheet);
@@ -124,13 +125,14 @@
       config.retreatLabel = '前一年'; config.retreatDisabled = !book.state.chronicleIndex;
       config.onRetreat = () => act('chronicle-previous');
     } else if (view === 'genealogy') {
-      config.key = `genealogy:${genealogySheet}`;
-      config.steps = [{ label: '家族树', side: 'left' }, { label: '人物释读', side: 'right' }];
+      const guided = genealogyMode === 'guide', index = guided ? genealogyGuide : genealogySheet;
+      config.key = `genealogy:${genealogyMode}:${index}`;
+      config.steps = [{ label: guided ? '关系小图' : '完整家谱', side: 'left' }, { label: genealogyPerson ? '人物释读' : '读懂这一图', side: 'right' }];
       config.index = mobileGenealogyPage;
-      config.advanceLabel = genealogySheet === 3 ? '返回目录' : '下一分谱';
-      config.onAdvance = () => act(genealogySheet === 3 ? 'routes' : 'genealogy-next');
-      config.retreatLabel = genealogySheet ? '上一分谱' : '卷首目录';
-      config.onRetreat = () => act(genealogySheet ? 'genealogy-previous' : 'routes');
+      config.advanceLabel = index === 3 ? '返回目录' : guided ? '下一关系图' : '下一分谱';
+      config.onAdvance = () => act(index === 3 ? 'routes' : guided ? 'genealogy-guide-next' : 'genealogy-next');
+      config.retreatLabel = index ? guided ? '上一关系图' : '上一分谱' : '卷首目录';
+      config.onRetreat = () => act(index ? guided ? 'genealogy-guide-previous' : 'genealogy-previous' : 'routes');
     } else if (view === 'routes') {
       config.steps = [{ label: '人物命运', side: 'left' }, { label: '历史全景', side: 'right' }];
       config.index = mobileRoutePage;
@@ -257,6 +259,7 @@
     if (!Number.isInteger(index) || !window.Genealogy.sheets[index]) return;
     const backwards = index < genealogySheet;
     turn(() => {
+      genealogyMode = 'detail';
       genealogySheet = index;
       genealogyPerson = person && window.Genealogy.people[person] ? person : window.Genealogy.sheets[index].defaultPerson;
       mobileGenealogyPage = person ? 1 : 0;
@@ -272,13 +275,22 @@
     });
     announce(`家族图谱：${window.Genealogy.sheets[index].title}。点名字阅读人物关系。`);
   }
+  function changeGenealogyGuide(index) {
+    if (!Number.isInteger(index) || !window.Genealogy.guides[index]) return;
+    const backwards = index < genealogyGuide;
+    turn(() => {
+      genealogyMode = 'guide'; genealogyGuide = index; genealogyPerson = null;
+      mobileGenealogyPage = 0; view = 'genealogy';
+    }, backwards, true);
+    announce(`入门关系第 ${index + 1} 图：${window.Genealogy.guides[index].question}`);
+  }
   function selectGenealogyPerson(id) {
     if (view !== 'genealogy' || !window.Genealogy.people[id]) return;
     window.MobileReader?.remember();
     genealogyPerson = id;
     document.querySelectorAll('.genealogy-person').forEach(node => node.setAttribute('aria-pressed', String(node.dataset.person === id)));
     const detail = document.querySelector('.genealogy-detail');
-    detail.innerHTML = window.Genealogy.detail(id);
+    detail.innerHTML = genealogyMode === 'guide' ? window.Genealogy.guideDetail(genealogyGuide, id) : window.Genealogy.detail(id);
     detail.closest('.leaf-content').scrollTop = 0;
     mobileGenealogyPage = 1;
     window.MobileReader?.sync({ ...mobileConfig(), resetScroll: true });
@@ -287,7 +299,7 @@
     announce(`${window.Genealogy.people[id].name}。人物与亲属关系已展开。`);
   }
   function refreshGenealogyTree(focusPath) {
-    if (view !== 'genealogy') return;
+    if (view !== 'genealogy' || genealogyMode !== 'detail') return;
     const wrapper = document.querySelector('.genealogy-tree-wrap'), body = wrapper.closest('.leaf-content');
     const scroll = body.scrollTop;
     wrapper.innerHTML = window.Genealogy.tree(genealogySheet, genealogyPerson, genealogyExpansion());
@@ -388,7 +400,7 @@
     document.documentElement.dataset.textSize = book.state.fontSize;
     if (view === 'cover') { cover(); return; }
     const pageName = view === 'genealogy' ? '卷首家族图谱' : view === 'chronicle' ? '上帝视角：图文时间轴' : view === 'routes' ? '选择阅读方式' : view === 'roles' ? '卷首人物选择' : view === 'ending' ? '尾声' : `第${roman[book.state.chapter]}章：${escape(book.chapter.title)}`;
-    app.innerHTML = `<main class="reading-screen">${header()}<article class="open-book ${view}-book" aria-label="${pageName}">${view === 'genealogy' ? window.Genealogy.render(genealogySheet, genealogyPerson, genealogyExpansion()) : view === 'chronicle' ? window.Chronicle.render(book.state.chronicleIndex) : view === 'routes' ? routePages() : view === 'roles' ? rolePages() : view === 'ending' ? endingPages() : chapterPages()}</article>${base()}</main>`;
+    app.innerHTML = `<main class="reading-screen">${header()}<article class="open-book ${view}-book" aria-label="${pageName}">${view === 'genealogy' ? genealogyMode === 'guide' ? window.Genealogy.renderGuide(genealogyGuide, genealogyPerson) : window.Genealogy.render(genealogySheet, genealogyPerson, genealogyExpansion()) : view === 'chronicle' ? window.Chronicle.render(book.state.chronicleIndex) : view === 'routes' ? routePages() : view === 'roles' ? rolePages() : view === 'ending' ? endingPages() : chapterPages()}</article>${base()}</main>`;
     mountLeaves();
     window.MobileReader?.mount(mobileConfig());
     if (view === 'reading') mountGame();
@@ -542,7 +554,22 @@
       case 'skip-intro': finishIntro(); break;
       case 'close-book': save(); stopSound(); cover(); window.scrollTo(0, 0); break;
       case 'routes': if (dialog.open) dialog.close(); turn(() => { mobileRoutePage = 0; view = 'routes'; }, true); break;
-      case 'genealogy': if (dialog.open) dialog.close(); changeGenealogy(genealogySheet); break;
+      case 'genealogy': if (dialog.open) dialog.close(); changeGenealogyGuide(genealogyGuide); break;
+      case 'genealogy-mode': if (target.dataset.mode === 'detail') changeGenealogy(genealogySheet); else changeGenealogyGuide(genealogyGuide); break;
+      case 'genealogy-guide': changeGenealogyGuide(Number(target.dataset.index)); break;
+      case 'genealogy-guide-previous': changeGenealogyGuide(genealogyGuide - 1); break;
+      case 'genealogy-guide-next': changeGenealogyGuide(genealogyGuide + 1); break;
+      case 'genealogy-guide-detail': changeGenealogy(Number(target.dataset.index), window.Genealogy.guides[genealogyGuide].defaultPerson); break;
+      case 'genealogy-find': changeGenealogy(window.Genealogy.findSheet(target.dataset.person), target.dataset.person); break;
+      case 'genealogy-guide-summary': {
+        genealogyPerson = null;
+        document.querySelectorAll('.genealogy-person').forEach(node => node.setAttribute('aria-pressed', 'false'));
+        document.querySelector('.genealogy-detail').innerHTML = window.Genealogy.guideDetail(genealogyGuide, null);
+        window.MobileReader?.sync({ ...mobileConfig(), resetScroll: true });
+        document.querySelector('.genealogy-person-page .leaf-content').scrollTop = 0;
+        document.querySelector('.guide-explanation h2')?.focus({ preventScroll: true });
+        syncLeafControls(); break;
+      }
       case 'genealogy-sheet': changeGenealogy(Number(target.dataset.index)); break;
       case 'genealogy-previous': if (view === 'genealogy') changeGenealogy(genealogySheet - 1); break;
       case 'genealogy-next': if (view === 'genealogy') changeGenealogy(genealogySheet + 1); break;
@@ -559,10 +586,12 @@
       case 'genealogy-jump': changeGenealogy(Number(target.dataset.index), target.dataset.person); break;
       case 'genealogy-return-tree': {
         window.MobileReader?.remember();
-        window.Genealogy.paths(genealogySheet, genealogyPerson).forEach(path => genealogyExpansion().add(path));
-        refreshGenealogyTree();
+        if (genealogyMode === 'detail') {
+          window.Genealogy.paths(genealogySheet, genealogyPerson).forEach(path => genealogyExpansion().add(path));
+          refreshGenealogyTree();
+        }
         mobileGenealogyPage = 0; syncMobile();
-        const node = document.querySelector('.genealogy-person[aria-pressed="true"]');
+        const node = document.querySelector('.genealogy-person[aria-pressed="true"]') || document.querySelector('.genealogy-heading h1');
         node?.focus({ preventScroll: true });
         const body = node?.closest('.leaf-content');
         if (body) body.scrollTo({ top: body.scrollTop + node.getBoundingClientRect().top - body.getBoundingClientRect().top - body.clientHeight / 2 + node.offsetHeight / 2, behavior: reducedMotion ? 'instant' : 'smooth' });
@@ -648,7 +677,7 @@
       return;
     }
     if (view === 'genealogy' && ['ArrowLeft', 'ArrowRight'].includes(event.key)) {
-      event.preventDefault(); act(event.key === 'ArrowRight' ? 'genealogy-next' : 'genealogy-previous'); return;
+      event.preventDefault(); act(genealogyMode === 'guide' ? event.key === 'ArrowRight' ? 'genealogy-guide-next' : 'genealogy-guide-previous' : event.key === 'ArrowRight' ? 'genealogy-next' : 'genealogy-previous'); return;
     }
     if (view === 'reading' && event.target.closest('.story-page') && ['ArrowLeft', 'ArrowRight'].includes(event.key)) {
       event.preventDefault(); turnStory(event.key === 'ArrowRight' ? 1 : -1); return;

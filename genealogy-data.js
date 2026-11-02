@@ -157,7 +157,7 @@ window.BOOK_GENEALOGY = {
       intro: '冈特的约翰留下两条支系：一条产生亨利六世，另一条通过玛格丽特·博福特传到亨利七世。',
       roots: [
         { person: 'johnGaunt', spouse: 'blanche', label: '第一段婚姻 · 兰开斯特国王的直系', children: [{ person: 'henry4', children: [{ person: 'henry5', children: [{ person: 'henry6', spouse: 'margaretAnjou', children: [{ person: 'edwardWestminster', spouse: 'anneNeville', label: '安妮的第一任丈夫 · 无子女' }] }] }] }] },
-        { person: 'johnGaunt', spouse: 'katherine', label: '第三段婚姻 · 博福特支系（中间婚姻省略）', children: [{ person: 'johnBeaufortEarl', children: [{ person: 'johnBeaufortDuke', children: [{ person: 'margaretBeaufort', spouse: 'edmundTudor', children: [{ person: 'henry7', spouse: 'elizabethYork', label: '1486 年联姻 · 下一代见约克分谱' }] }] }] }] }
+        { person: 'johnGaunt', spouse: 'katherine', label: '第三段婚姻 · 博福特支系（中间婚姻省略）', children: [{ person: 'johnBeaufortEarl', children: [{ person: 'johnBeaufortDuke', children: [{ person: 'margaretBeaufort', spouse: 'edmundTudor', children: [{ person: 'henry7', spouse: 'elizabethYork', label: '1486 年联姻 · 下一代见约克分谱' }] }] }] }, { person: 'joanBeaufort', label: '女儿 · 内维尔后代见第四谱' }] }
       ],
       notes: ['两处冈特的约翰是同一个人；分开画是为了区分孩子的母亲。', '博福特子女后来获得合法身份，但王冠继承仍存在法律与政治障碍，不能把合法化理解为自动拥有王位。', '安茹的玛格丽特是亨利六世的妻子；玛格丽特·博福特是亨利七世的母亲。'] },
     { id: 'york', title: '约克王室', subtitle: '兄弟争权，孩子承受余波', defaultPerson: 'richardYork',

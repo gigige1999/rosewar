@@ -11,6 +11,7 @@ const out = path.join(root, 'output', 'genealogy-review');
 const url = pathToFileURL(path.join(root, 'index.html')).href;
 const key = 'wars-of-the-roses-manuscript-v1';
 const errors = [], measurements = [];
+const desktopOnly = process.argv.includes('--desktop-only');
 let fixtureId = 0;
 const state = page => page.evaluate(key => JSON.parse(localStorage.getItem(key)), key);
 const settle = async page => {
@@ -21,6 +22,13 @@ async function click(page, action, scope = '') {
   await page.locator(scope + '[data-action="' + action + '"]').first().click();
   await page.locator('.page-turn').waitFor({ state: 'detached' });
   await settle(page);
+  // The public entry now begins with four simple relationship guides. This
+  // older suite intentionally exercises the complete reference register.
+  if (action === 'genealogy') {
+    await page.locator('[data-action="genealogy-mode"][data-mode="detail"]').click();
+    await page.locator('.page-turn').waitFor({ state: 'detached' });
+    await settle(page);
+  }
 }
 async function openDirectory(page) {
   await click(page, 'open-book');
@@ -296,7 +304,7 @@ async function tail(page, selector, label) {
     }
     console.log('PASS fresh / character / chronicle storage stays unchanged, including unconfirmed decisions, story page and refresh');
 
-    for(const [width,height,font]of [[1280,620,'standard'],[900,650,'large'],[390,844,'standard'],[320,740,'large']]){
+    for(const [width,height,font]of [[1280,620,'standard'],[900,650,'large'],[390,844,'standard'],[320,740,'large']].filter(([width])=>!desktopOnly||width>760)){
       await page.setViewportSize({width,height});
       await fixture(page,{...saved,fontSize:font});await openDirectory(page);await click(page,'genealogy');
       for(let index=0;index<4;index++){
@@ -322,9 +330,9 @@ async function tail(page, selector, label) {
       }
     }
     assert.deepEqual(errors,[]);
-    fs.writeFileSync(path.join(out,'report.json'),JSON.stringify({people:allMembers.size,errors,measurements},null,2));
+    fs.writeFileSync(path.join(out,desktopOnly?'desktop-report.json':'report.json'),JSON.stringify({people:allMembers.size,errors,measurements},null,2));
     if(fs.existsSync(path.join(out,'failure.png')))fs.unlinkSync(path.join(out,'failure.png'));
-    console.log('PASS short desktop / large text / 390px / 320px trees, details and reachable navigation; 0 runtime errors');
+    console.log(desktopOnly ? 'PASS detailed reference: short desktop / large text, readable final lines and reachable navigation; 0 runtime errors' : 'PASS short desktop / large text / 390px / 320px trees, details and reachable navigation; 0 runtime errors');
   }catch(error){
     console.error('Runtime errors:',errors);
     if(page)await page.screenshot({path:path.join(out,'failure.png'),timeout:3000,fullPage:true}).catch(()=>{});
