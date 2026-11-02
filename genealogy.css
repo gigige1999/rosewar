@@ -1,0 +1,131 @@
+/* The family register uses the same ink and ruled parchment as the narrative. */
+.genealogy-heading{margin:10px 0 9px}
+.genealogy-heading>.eyebrow{font-size:10px;line-height:1.7;letter-spacing:.11em}
+.genealogy-heading h1{font-size:25px;font-weight:400;letter-spacing:.06em;line-height:1.5;color:#582f2c;margin:0 0 3px}
+.genealogy-heading>p{font-size:12px;line-height:1.8;color:#70543d}
+.genealogy-tabs{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #99774c55;border-bottom:1px solid #99774c55;gap:0 12px;padding:4px 0}
+.genealogy-tabs button{min-height:31px;line-height:1.6;font-size:12px;text-align:left;letter-spacing:.02em;padding:4px 3px;color:#7f6346}
+.genealogy-tabs button[aria-pressed="true"]{color:var(--red);font-weight:600}
+.genealogy-legend{display:flex;flex-wrap:wrap;gap:7px 16px;font-size:11px;line-height:1.7;color:#765839;margin:8px 0 0}
+.genealogy-tree-tools{display:flex;align-items:center;flex-wrap:wrap;gap:0 12px;margin:2px 0 9px}
+.genealogy-tree-tools>span{font-size:11px;line-height:1.7;color:#866c4c;margin-right:auto}
+.genealogy-tree-tools button{font-size:11px;min-height:30px;padding:4px 0;color:var(--red);letter-spacing:0}
+.genealogy-children[hidden]{display:none}
+.genealogy-toggle{display:block;color:#815d3c;font-size:11px;line-height:1.5;min-height:29px;padding:5px 5px 1px;margin-left:auto;text-align:right}
+.genealogy-toggle:hover{color:var(--red);text-decoration:underline;text-underline-offset:3px}
+.genealogy-instruction{font-size:12px;line-height:1.8;color:#866c4c;margin:0 0 15px}
+.genealogy-tree,.genealogy-children{list-style:none;padding:0;margin:0}
+.genealogy-tree{padding:0 1px 4px 0}
+.genealogy-branch{position:relative;margin:0;padding:0 0 15px;min-width:0}
+.genealogy-children{padding:10px 0 0 17px;margin-left:10px}
+.genealogy-children>.genealogy-branch::before{content:'';position:absolute;left:-17px;top:-10px;bottom:0;border-left:1px solid #98764c}
+.genealogy-children>.genealogy-branch:last-child::before{bottom:auto;height:33px}
+.genealogy-children>.genealogy-branch::after{content:'';position:absolute;left:-17px;top:23px;width:17px;border-top:1px solid #98764c}
+.genealogy-node{display:flex;align-items:stretch;position:relative;min-width:0}
+.genealogy-person{position:relative;display:flex;flex-direction:column;justify-content:center;gap:3px;min-width:0;width:100%;padding:9px 12px;text-align:left;border:1px solid #9d805654;background:#d7c59d24;color:#513d2d;min-height:58px}
+.genealogy-name{font-size:17px;line-height:1.6;overflow-wrap:anywhere}
+.genealogy-person>small{font-size:11px;line-height:1.65;color:#806243;overflow-wrap:anywhere}
+.genealogy-core{border-color:#8e4a4d88}
+.genealogy-core .genealogy-name{padding-right:10px}
+.genealogy-person>i{position:absolute;right:7px;top:9px;font-size:10px;color:#883f47;font-style:normal}
+.genealogy-person:hover{border-color:#793a40;background:#c0a16a20}
+.genealogy-person[aria-pressed="true"]{background:#692c37;color:#f4e8cf;border-color:#692c37}
+.genealogy-person[aria-pressed="true"]>small,.genealogy-person[aria-pressed="true"]>i{color:#e0c99e}
+.genealogy-couple{display:grid;grid-template-columns:minmax(0,1fr)23px minmax(0,1fr)}
+.genealogy-marriage{display:flex;align-items:center;justify-content:center;flex-direction:column;color:#956c42;font-family:var(--latin);font-size:19px;line-height:1}
+.genealogy-marriage small{font-size:10px;line-height:1.6;font-family:var(--serif)}
+.genealogy-edge-note{font-size:11px;line-height:1.65;color:#826644;margin:0 0 5px;padding-left:5px}
+.genealogy-branch:has(>.genealogy-edge-note)::after{top:23px}
+/* With the deeper descendants folded, the first generation forms a true fork. */
+@media(min-width:761px){
+  .genealogy-tree-overview>.genealogy-branch>.genealogy-toggle{display:none}
+  .genealogy-tree-overview>.genealogy-branch>.genealogy-children:not([hidden]){display:grid;grid-template-columns:repeat(var(--family-branches),minmax(0,1fr));gap:0;margin:0;padding:28px 0 0;position:relative}
+  .genealogy-tree-overview>.genealogy-branch>.genealogy-children::before{content:'';position:absolute;top:0;left:50%;height:15px;border-left:1px solid #98764c}
+  .genealogy-tree-overview>.genealogy-branch>.genealogy-children>.genealogy-branch{padding:15px 5px 3px}
+  .genealogy-tree-overview>.genealogy-branch>.genealogy-children>.genealogy-branch::before{left:0;top:-14px;right:50%;height:29px;bottom:auto;border-top:1px solid #98764c;border-right:1px solid #98764c;border-left:0}
+  .genealogy-tree-overview>.genealogy-branch>.genealogy-children>.genealogy-branch::after{left:50%;top:-14px;right:0;width:auto;border-top:1px solid #98764c}
+  .genealogy-tree-overview>.genealogy-branch>.genealogy-children>.genealogy-branch:first-child::before{border-top:0}
+  .genealogy-tree-overview>.genealogy-branch>.genealogy-children>.genealogy-branch:last-child::after{border-top:0}
+  .genealogy-tree-overview>.genealogy-branch>.genealogy-children>.genealogy-branch>.genealogy-edge-note{display:none}
+  .genealogy-tree-overview>.genealogy-branch>.genealogy-children>.genealogy-branch>.genealogy-node{display:flex;flex-direction:column;height:calc(100% - 32px)}
+  .genealogy-tree-overview .genealogy-children .genealogy-person{padding:8px;flex:1;text-align:center}
+  .genealogy-tree-overview .genealogy-children .genealogy-name{font-size:16px}
+  .genealogy-tree-overview .genealogy-children .genealogy-marriage{height:23px;flex-direction:row;gap:6px}
+  .genealogy-tree-overview .genealogy-children .genealogy-marriage>span{transform:rotate(90deg)}
+  .genealogy-tree-overview .genealogy-children .genealogy-toggle{width:100%;text-align:center;min-height:32px;padding-top:6px}
+  .genealogy-tree-overview+.genealogy-notes{margin-top:13px}
+  html[data-text-size="large"] .genealogy-tree-overview .genealogy-children .genealogy-name{font-size:18px}
+}
+.genealogy-notes{border-top:1px solid #98764c44;padding-top:11px;margin:6px 0 9px}
+.genealogy-notes>p{font-size:12px;line-height:1.9;color:#806446;margin:0 0 7px}
+.genealogy-detail{padding-top:22px}
+.genealogy-return-tree{display:none}
+.genealogy-person-heading{display:flex;gap:17px;align-items:center;margin-bottom:22px;min-width:0}
+.genealogy-person-heading>div:last-child{min-width:0;flex:1}
+.genealogy-person-heading .eyebrow{font-size:11px;line-height:1.9;letter-spacing:.08em}
+.genealogy-person-heading h2{font-size:27px;font-weight:400;line-height:1.55;margin:8px 0;color:#592e2c;overflow-wrap:anywhere}
+.genealogy-person-heading h2:focus{outline:none}
+.genealogy-years{font:13px var(--latin);letter-spacing:.07em;color:#8a6c45;margin-bottom:8px}
+.genealogy-identity{font-size:13px;line-height:1.8;color:#77583d}
+.genealogy-portrait{width:135px;max-width:38%;height:180px;object-fit:contain;flex-shrink:0}
+.genealogy-initial{width:62px;height:74px;display:grid;place-items:center;flex-shrink:0;color:#8a4548;border:1px solid #98764c44;border-radius:50% 50% 2px 2px}
+.genealogy-initial svg{width:33px;height:33px}
+.genealogy-bio,.genealogy-relations li{font-size:var(--reading-body);line-height:1.9;color:#503e2e}
+.genealogy-bio{margin:0 0 22px}
+.genealogy-relations{border-top:1px solid #98764c44;padding-top:15px}
+.genealogy-relations h3{font-size:13px;font-weight:400;line-height:1.8;letter-spacing:.08em;color:#885e3e;margin:0 0 10px}
+.genealogy-relations ul{list-style:none;margin:0;padding:0}
+.genealogy-relations li{position:relative;padding-left:17px;margin:0 0 12px}
+.genealogy-relations li::before{content:'◇';position:absolute;left:0;top:4px;font-size:11px;color:#947044}
+.genealogy-crosslinks{display:flex;flex-direction:column;align-items:flex-start;gap:4px;border-top:1px solid #98764c44;padding-top:13px;margin:17px 0}
+.genealogy-crosslinks>span{font-size:12px;color:#86694a;margin-bottom:2px;line-height:1.8}
+.genealogy-crosslinks button{font-size:14px;line-height:1.8;min-height:37px;text-align:left;color:var(--red)}
+.genealogy-read-role{font-size:14px;min-height:43px;width:100%;margin-top:18px}
+.genealogy-detail-note{font-size:12px;color:#8a7352;line-height:1.8;margin:15px 0 7px}
+.genealogy-base .text-button{color:var(--red)}
+.route-genealogy-link{display:flex;align-items:center;gap:9px;color:var(--red);font-size:14px;line-height:1.75;text-align:left;min-height:41px;margin:13px 0 0;padding:7px 0;border-top:1px solid #9b784844;border-bottom:1px solid #9b784844;width:100%}
+.route-genealogy-link>svg{width:23px;height:23px;flex-shrink:0}
+.routes-book .route-witnesses{margin:18px 0;gap:14px 8px}
+html[data-text-size="large"] .genealogy-name{font-size:18px}
+@media(min-width:761px) and (max-width:1100px){
+  .toolbar{gap:10px}
+  .reading-header .brand-button span{display:none}
+  .genealogy-children{padding-left:13px;margin-left:6px}
+  .genealogy-children>.genealogy-branch::before{left:-13px}
+  .genealogy-children>.genealogy-branch::after{left:-13px;width:13px}
+  .genealogy-person{padding:8px}
+  .genealogy-person-heading{gap:12px}
+  .genealogy-person-heading h2{font-size:24px}
+}
+@media(max-width:760px){
+  .genealogy-heading h1{font-size:29px}
+  .genealogy-heading>p{font-size:13px}
+  .genealogy-tabs{gap:0 8px}
+  .genealogy-tabs button{font-size:13px;min-height:44px}
+  .genealogy-toggle{font-size:12px;min-height:40px}
+  .genealogy-tree-tools>span{width:100%;font-size:12px}
+  .genealogy-tree-tools button{font-size:12px;min-height:40px}
+  .genealogy-children{padding-left:10px;margin-left:4px}
+  .genealogy-children>.genealogy-branch::before{left:-10px}
+  .genealogy-children>.genealogy-branch::after{left:-10px;width:10px}
+  .genealogy-person{padding:8px 9px;min-height:63px}
+  .genealogy-name{font-size:17px}
+  .genealogy-couple{grid-template-columns:minmax(0,1fr)}
+  .genealogy-marriage{flex-direction:row;justify-content:flex-start;gap:7px;min-height:23px;padding-left:15px}
+  .genealogy-marriage>span{transform:rotate(90deg)}
+  .genealogy-marriage small{font-size:11px}
+  .genealogy-legend{font-size:12px;gap:7px 12px}
+  .genealogy-detail{padding-top:20px}
+  .genealogy-return-tree{display:inline-flex;align-self:flex-start;min-height:44px;margin-top:10px;font-size:14px;color:var(--red)}
+  .genealogy-person-heading{align-items:center;gap:14px}
+  .genealogy-person-heading.has-portrait{flex-direction:column;text-align:center}
+  .genealogy-portrait{width:155px;height:207px;max-width:100%}
+  .genealogy-person-heading h2{font-size:27px}
+  .genealogy-person-heading .eyebrow{font-size:12px}
+  .genealogy-crosslinks button{font-size:16px;min-height:44px}
+  .genealogy-bio,.genealogy-relations li{line-height:1.95}
+  .genealogy-base{justify-content:space-between}
+  .genealogy-base>.micro{width:100%;order:2;text-align:center}
+  .genealogy-base .text-button{min-height:44px}
+  .route-genealogy-link{font-size:14px}
+}

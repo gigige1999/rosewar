@@ -1,0 +1,126 @@
+/* The second edition: tactile games, full chronicle, comfortable reading. */
+:root{--reading-body:17px;--reading-secondary:15px;--reading-line:1.95}
+:root[data-text-size="large"]{--reading-body:20px;--reading-secondary:17px;--reading-line:2}
+.reading-screen{max-width:1600px;padding-bottom:30px}
+.reading-header{width:min(1240px,100%)}
+.open-book{width:min(1200px,100%)}
+.book-base{width:min(1200px,100%);gap:20px;flex-wrap:wrap}
+.page{padding:30px 40px;min-height:740px}
+.page-running{font-size:11px;letter-spacing:.1em;line-height:1.8;gap:12px}
+.page-number{font-size:13px;padding-top:25px}
+.reading-header .brand-button{font-size:13px}
+.toolbar{gap:18px}.toolbar .text-button{font-size:13px;min-height:40px}
+.toolbar .current-route{color:var(--red);border-bottom-color:#79323d77}
+.font-toggle{font-size:20px;border:1px solid #9f815443;width:35px;height:35px;border-radius:2px}
+.font-toggle[aria-pressed=true]{background:var(--red);color:var(--paper-light);border-color:var(--red)}
+.book-base .micro,.book-base .text-button{font-size:13px;line-height:1.8}
+.book-navigation{gap:22px}.book-navigation button{min-height:44px}
+.chapter-dots{gap:13px}.chapter-dot{padding:16px 6px}
+.story-summary,.ending-prose{font-size:var(--reading-body);line-height:var(--reading-line);color:#49392d}
+.voice p{font-size:var(--reading-body);line-height:1.85;color:#733e3d}
+.voice-label{font-size:12px;color:#795c3e;line-height:1.7}
+.voice{margin:21px 0 24px;padding-left:18px}
+.story-heading{font-size:13px;margin:22px 0 14px;letter-spacing:.12em}
+.story-summary:first-letter{font-size:42px;line-height:1.3}
+.chapter-page-heading{text-align:center;margin:22px 0 23px;padding-bottom:20px;border-bottom:1px solid var(--line)}
+.chapter-page-heading .chapter-year{font-size:37px;letter-spacing:.13em}
+.chapter-page-heading h2{font-size:29px;font-weight:400;letter-spacing:.1em;line-height:1.6;margin:7px 0}
+.chapter-page-heading .chapter-date{font-size:13px;color:#775c3c;margin-top:6px}
+.chapter-scene{position:relative;margin:18px 0 0;width:100%;text-align:center;overflow:hidden}
+.chapter-scene>svg{width:100%;height:auto;max-height:280px}
+.chapter-scene img{position:absolute;inset:0;width:100%;height:calc(100% - 32px);object-fit:cover}
+.chapter-scene figcaption{font-size:13px;color:#775d3e;line-height:1.8;margin-top:4px}
+.story-revelation{margin-top:auto}
+.revealed-fact{padding:15px 18px;margin-top:0;background:#ae8c4310}
+.revealed-fact p{font-size:var(--reading-secondary);line-height:1.9;color:#694c33}
+.revelation-label{font-size:12px!important;line-height:1.8}
+.chapter-continue{font-size:14px;margin-top:17px;min-height:45px}
+.unrevealed-note{display:flex;align-items:center;gap:11px;font-size:14px;line-height:1.8;color:#816446;border-top:1px solid var(--line);padding:20px 0 4px}
+.unrevealed-note svg{width:20px;height:20px}
+.game-panel{flex:1}.game-panel-heading{display:flex;justify-content:space-between;gap:15px;font-size:11px;letter-spacing:.1em;color:#836641;line-height:1.8}
+.game-panel-heading>span:last-child{color:var(--red)}
+.game-panel h3{font-size:23px;font-weight:400;letter-spacing:.05em;line-height:1.6;margin-top:7px;color:#5d2c2e}
+.game-stakes{font-size:var(--reading-secondary);line-height:1.9;color:#79543d;margin:9px 0 12px}
+.game-instruction{font-size:14px;line-height:1.85;color:#554332;margin-bottom:16px;padding-left:12px;border-left:2px solid #a3814c60}
+.game-board{width:100%;min-width:0}
+.game-foot{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-top:15px;min-height:30px}
+.game-message{font-size:14px;line-height:1.85;color:var(--red)}
+.game-foot .hint-button{font-size:13px;white-space:nowrap;min-height:36px}
+.game-foot>svg{height:22px;width:22px;color:#8d653b}
+.game-hint{font-size:15px;line-height:1.9;border-top:1px dotted #9f7c4d;padding-top:13px;margin-top:7px;color:#715335}
+.game-reset{font-size:13px;color:#7c6546;min-height:38px;padding:5px 0;text-decoration:underline;text-underline-offset:4px;text-decoration-color:#9f7c4d66}
+.game-complete .game-panel-heading{color:#795b36}
+.role-arch{height:205px;width:175px}.role-frontispiece{padding-top:25px}.role-frontispiece h2{font-size:29px}
+.role-description{font-size:var(--reading-secondary);line-height:1.95;max-width:365px;color:#69543c}
+.role-motto{font-size:19px;margin:19px 0 15px}.role-epithet{font-size:13px;line-height:1.8}
+.role-game-preview{margin-top:24px;border-top:1px solid var(--line);padding-top:17px;width:100%;max-width:365px;text-align:left}
+.role-game-preview>span{display:block;font-size:12px;letter-spacing:.1em;color:#886b44}
+.role-game-preview strong{display:block;font-size:20px;font-weight:400;color:#733840;margin:7px 0}
+.role-game-preview p{font-size:15px;line-height:1.9;color:#6d543c}
+.selection-heading{font-size:30px;line-height:1.6;margin-top:26px}
+.selection-intro{font-size:15px;line-height:1.95;max-width:none;color:#735b3e}
+.role-card{padding:15px 14px;min-height:115px}.role-card strong{font-size:16px;line-height:1.65}
+.role-card small{font-size:12px;margin-top:7px}.role-card svg{height:30px;width:30px;margin-bottom:9px}
+.choose-role{font-size:15px;min-height:49px}
+.fiction-note{font-size:12px;line-height:1.9;margin-top:15px}
+.cover-chronicle-link{font-size:12px;color:#694830;letter-spacing:.12em;margin-top:17px;padding:7px 4px;border-bottom:1px solid #947a4e55}
+.cover-chronicle-link:hover{color:var(--red);border-color:var(--red)}
+.route-number{font:30px var(--latin);color:#947345;margin-top:28px}
+.route-heading{font-size:37px;line-height:1.6;font-weight:400;letter-spacing:.08em;margin:14px 0 20px;color:#4c3029}
+.route-description{font-size:17px;line-height:2;color:#796047}
+.route-witnesses{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:25px 10px;margin:38px 0 35px}
+.route-witnesses>span{display:flex;align-items:center;flex-direction:column;gap:12px}
+.route-witnesses svg{width:45px;height:45px;color:#7d3640}
+.route-witnesses small{font-size:12px;text-align:center;color:#73573a;line-height:1.7}
+.route-panorama{height:225px;margin:20px 0 17px;text-align:center}
+.route-panorama>svg{width:100%;height:100%}
+.route-button{margin-top:auto;min-height:48px;font-size:15px;gap:14px}
+.route-footnote{font-size:12px;line-height:1.8;text-align:center;margin-top:15px;color:#836b4a}
+.chronicle-position{font:15px var(--latin);letter-spacing:.1em;color:#7b5937}
+.chronicle-event-content>p{font-size:var(--reading-body);line-height:var(--reading-line)}
+.chronicle-marginal,.chronicle-consequence>p{font-size:var(--reading-secondary);color:#72573c}
+.ending-role{font-size:30px}.ending-quote{font-size:21px}.colophon{font-size:15px;line-height:2;color:#765c3e}
+.ending-actions .primary-button{font-size:14px}.ending-actions .text-button{font-size:14px}
+.dialog{width:min(590px,calc(100% - 32px))}.dialog-description{font-size:15px;line-height:1.95}.dialog-note{font-size:13px;line-height:1.9;color:#705537}
+.timeline-title{font-size:15px}.timeline-status{font-size:12px}.timeline-year{font-size:21px}.timeline-list button{min-height:53px}.dialog-sources{font-size:14px}
+@media(min-width:1500px){.page{padding:32px 44px}.game-panel{max-width:500px}.chapter-scene>svg{max-height:310px}}
+@media(max-width:1050px) and (min-width:761px){.reading-screen{padding-left:22px;padding-right:22px}.page{padding:25px 25px}.game-panel h3{font-size:22px}.role-card{padding:12px 10px}.role-card strong{font-size:14px}.role-description{font-size:15px}.selection-heading{font-size:27px}.route-heading{font-size:31px}.route-description{font-size:16px}.route-button{font-size:13px;padding-left:13px;padding-right:13px}.toolbar{gap:12px}}
+@media(max-width:760px){
+  :root{--reading-body:18px;--reading-secondary:16px}:root[data-text-size="large"]{--reading-body:21px;--reading-secondary:18px}
+  .reading-screen{padding:13px 14px 24px}.reading-header{align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:17px}.reading-header .brand-button{font-size:12px;height:34px}
+  .toolbar{gap:11px;margin-left:auto;justify-content:flex-end}.toolbar .text-button{font-size:12px;min-height:34px}.toolbar .icon-button{width:29px;height:32px}.toolbar .font-toggle{font-size:18px;width:30px}.toolbar .fullscreen-toggle{display:none}
+  .open-book{max-width:510px}.page{padding:24px 25px;min-height:0}.page-running{font-size:10px;line-height:1.8;letter-spacing:.06em}
+  .book-base{max-width:510px;gap:13px}.book-base .micro,.book-base .text-button{font-size:12px}.book-navigation{gap:17px}.chapter-dots{gap:10px}.chapter-dot{padding:13px 4px}
+  .chapter-page-heading{margin-top:19px}.chapter-page-heading h2{font-size:28px}.chapter-page-heading .chapter-year{font-size:36px}.chapter-page-heading .chapter-date{font-size:12px}
+  .chapter-page.right-page{padding-top:20px}.chapter-scene{margin-top:12px}.chapter-scene>svg{max-height:270px}.chapter-scene figcaption{font-size:13px}
+  .game-panel h3{font-size:24px}.game-panel-heading{font-size:10px}.game-instruction{font-size:15px}.game-stakes{font-size:16px}.game-foot{align-items:flex-start}.game-message{font-size:14px}
+  .story-summary{line-height:1.95}.voice p{line-height:1.95}.voice-label{font-size:12px}.story-heading{font-size:13px}.unrevealed-note{font-size:14px}.revelation-label{font-size:12px!important}
+  .role-arch{width:140px;height:156px}.role-frontispiece h2{font-size:26px}.role-motto{font-size:18px}.role-description{font-size:16px}.role-game-preview p{font-size:16px}
+  .role-card{padding:13px 10px;min-height:116px}.role-card strong{font-size:14px}.role-card small{font-size:11px}.selection-heading{font-size:28px}.selection-intro{font-size:16px}.fiction-note{font-size:12px}
+  .route-heading{font-size:32px;margin-top:10px}.route-description{font-size:17px}.route-number{font-size:26px;margin-top:19px}.route-witnesses{gap:23px 7px;margin:28px 0}.route-witnesses small{font-size:11px}.route-witnesses svg{height:40px;width:40px}.route-panorama{height:210px}.route-button{font-size:14px}.route-footnote{font-size:11px}
+  .chronicle-base .role-badge{order:0;width:auto}.chronicle-base .book-navigation{width:100%;justify-content:space-between}.chronicle-position{margin-left:auto;font-size:13px}
+  .chronicle-event-content>p{font-size:var(--reading-body)}.chronicle-node-title{font-size:15px}.chronicle-event.is-current .chronicle-node-title{font-size:16px}.chronicle-marginal,.chronicle-consequence>p{font-size:var(--reading-secondary)}
+  .colophon{font-size:15px}.ending-role{font-size:28px}.dialog{padding:25px 23px}.timeline-title{font-size:14px}.timeline-status{font-size:11px}
+}
+@media(max-width:350px){.page{padding:22px 19px}.toolbar{gap:8px}.reading-header .brand-button{font-size:11px}.reading-header{gap:2px}.role-card{padding:11px 7px}.role-card strong{font-size:13px}.role-grid{gap:8px}.chapter-page-heading h2{font-size:25px}.game-panel h3{font-size:22px}.game-panel-heading{letter-spacing:0;font-size:10px}.book-navigation{gap:12px}.book-base .text-button{font-size:11px}.chronicle-node-title{font-size:14px}.chronicle-event.is-current .chronicle-node-title{font-size:15px}}
+/* Explicit sizes also keep live toggling reliable on older browser engines. */
+html[data-text-size="large"] .story-summary,
+html[data-text-size="large"] .voice p,
+html[data-text-size="large"] .ending-prose,
+html[data-text-size="large"] .chronicle-event-content>p{font-size:20px}
+html[data-text-size="large"] .game-stakes,
+html[data-text-size="large"] .role-description,
+html[data-text-size="large"] .chronicle-marginal,
+html[data-text-size="large"] .chronicle-consequence>p,
+html[data-text-size="large"] .revealed-fact p{font-size:17px}
+@media(max-width:760px){
+  html[data-text-size="large"] .story-summary,
+  html[data-text-size="large"] .voice p,
+  html[data-text-size="large"] .ending-prose,
+  html[data-text-size="large"] .chronicle-event-content>p{font-size:21px}
+  html[data-text-size="large"] .game-stakes,
+  html[data-text-size="large"] .role-description,
+  html[data-text-size="large"] .chronicle-marginal,
+  html[data-text-size="large"] .chronicle-consequence>p,
+  html[data-text-size="large"] .revealed-fact p{font-size:18px}
+}

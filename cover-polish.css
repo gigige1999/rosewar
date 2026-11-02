@@ -1,0 +1,61 @@
+/* A quiet title page; the binding and portrait plates carry the ornament. */
+.cover-quiet{padding:38px 42px 30px;min-height:100svh}
+.cover-quiet .cover-stage{min-height:0;padding:32px 0 16px}
+.cover-language{position:absolute;top:27px;right:36px;display:flex;align-items:center;gap:11px;color:#9b8769;font:11px var(--latin);letter-spacing:.12em;z-index:2}
+.cover-language button{min-width:34px;min-height:34px;padding:5px 3px;color:#96856b}
+.cover-language button[aria-pressed="true"]{color:var(--red);box-shadow:0 1px #8e6d4c70}
+.cover-language button:hover{color:var(--red)}
+.cover-quiet .open-invitation{margin-top:40px;font-size:13px;letter-spacing:.17em}
+.cover-quiet .cover-caption{max-width:min(85vw,420px);text-align:center;font-size:10px;line-height:1.7;margin-top:9px;min-height:0}
+.cover-quiet .cover-chronicle-link{margin-top:13px;border:0;padding:7px;font-size:11px;letter-spacing:.15em;color:#8e7858}
+.cover-edition-en .cover-title{font-family:var(--latin);font-size:28px;letter-spacing:.06em;line-height:1.22;text-align:center;margin:17px 0 8px 14px}
+.cover-edition-en .cover-english{font-size:8px;letter-spacing:.18em}
+.cover-edition-en .cover-rose{height:167px;width:139px;margin-top:9px}
+.cover-edition-en .cover-subtitle{font:8px var(--latin);letter-spacing:.15em;margin-left:14px}
+.cover-edition-en .open-invitation{font-family:var(--latin);letter-spacing:.09em}
+.cover-edition-en .cover-chronicle-link{font-family:var(--latin);letter-spacing:.06em}
+.opening .cover-language,.opening .cover-chronicle-link{opacity:0;transition:opacity .25s}
+
+.role-portrait-heading{grid-template-columns:minmax(0,178px) minmax(0,1fr);gap:22px}
+.role-portrait-heading .role-arch.portrait-reserve,.role-portrait-heading .role-arch.portrait-reserve:has(img){width:100%;height:auto;aspect-ratio:3/4;max-width:178px;margin:0;background:#b4986010;outline-offset:5px}
+.role-portrait-heading .role-arch.portrait-reserve img{object-fit:contain}
+.role-portrait-heading .role-identity h2{font-size:25px;line-height:1.55;overflow-wrap:anywhere}
+.role-portrait-heading .role-identity .eyebrow{font-size:10px;line-height:1.75;letter-spacing:.1em}
+.role-portrait-heading .role-identity .role-years{font-size:12px;letter-spacing:.08em}
+.role-portrait-heading .role-identity .role-epithet{font-size:13px;margin-top:5px}
+.leaf-footer.leaf-footer-action{display:grid;grid-template-columns:auto 1fr;gap:6px 12px}
+.leaf-footer-action .choose-role{grid-column:1/-1;width:100%;margin:0;min-height:42px;padding:10px 13px;letter-spacing:.08em}
+.leaf-footer-action .leaf-scroll-controls{justify-self:end}
+
+@media(min-width:761px) and (max-width:1100px){
+  .role-portrait-heading{grid-template-columns:minmax(0,46%) minmax(0,1fr);gap:17px}
+  .role-portrait-heading .role-identity h2{font-size:23px}
+}
+@media(min-width:761px) and (max-height:760px){
+  .cover-quiet{padding-top:34px;padding-bottom:20px}
+  .cover-quiet .cover-stage{padding:18px 0 8px}
+  .cover-quiet .open-invitation{margin-top:29px}
+  .cover-edition-en .cover-title{font-size:25px;margin-top:12px}
+  .cover-edition-en .cover-rose{height:142px;width:120px;margin-top:7px}
+  .role-portrait-heading{gap:19px}
+}
+@media(max-width:760px){
+  .cover-quiet{padding:42px 24px 24px}
+  .cover-language{top:17px;right:22px}
+  .cover-quiet .cover-stage{padding:35px 0 15px}
+  .cover-edition-en .cover-title{font-size:24px;margin-top:13px}
+  .cover-edition-en .cover-rose{height:145px;width:123px;margin-top:8px}
+  .cover-edition-en .cover-subtitle{font-size:7px;letter-spacing:.12em}
+  .role-portrait-heading{grid-template-columns:1fr;justify-items:center;gap:19px;text-align:center}
+  .role-portrait-heading .role-arch.portrait-reserve,.role-portrait-heading .role-arch.portrait-reserve:has(img){width:180px;max-width:180px;aspect-ratio:3/4;height:auto}
+  .role-portrait-heading .role-identity h2{font-size:27px;margin-top:5px;margin-bottom:6px}
+  .role-portrait-heading .role-identity .eyebrow{font-size:11px}
+  .role-portrait-heading .role-identity .role-years{font-size:13px}
+  .role-frontispiece .role-motto{margin-top:22px}
+}
+@media(max-width:350px){
+  .cover-edition-en .cover-title{font-size:22px;margin-top:12px}
+  .cover-edition-en .cover-rose{height:128px;width:111px}
+  .cover-edition-en .cover-subtitle{font-size:6.5px}
+}
+@media(prefers-reduced-motion:reduce){.opening .cover-language,.opening .cover-chronicle-link{transition:none}}

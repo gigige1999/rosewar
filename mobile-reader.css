@@ -1,0 +1,154 @@
+/* One touchable parchment leaf, held between a quiet header and thumb controls. */
+.mobile-reader-nav,.mobile-tools-button,.mobile-directory-extras,.mobile-menu-about{display:none}
+@media(max-width:760px){
+  html.mobile-reader-open,html.mobile-reader-open body{height:100%;overflow:hidden;overscroll-behavior:none}
+  .mobile-reader-screen{display:grid;grid-template-rows:44px minmax(0,1fr)auto;gap:8px;align-items:stretch;justify-items:center;width:100%;height:100svh;height:100dvh;min-height:0;max-height:none;padding:calc(5px + env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) calc(5px + env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));overflow:hidden;animation:none}
+  .mobile-reader-screen .reading-header{position:relative;display:flex;flex-wrap:nowrap;align-items:center;justify-content:space-between;width:min(510px,100%);height:44px;min-height:0;gap:7px;margin:0;z-index:35}
+  .mobile-reader-screen .brand-button{min-width:36px;min-height:40px;margin:0;padding:7px;flex-shrink:0}
+  .mobile-reader-screen .brand-button span{display:none}
+  .mobile-reader-screen .brand-button svg{width:21px;height:21px}
+  .mobile-reader-screen .toolbar{display:flex;flex:1;align-items:center;justify-content:flex-end;flex-wrap:nowrap;gap:8px;margin:0;max-width:none}
+  .mobile-reader-screen .toolbar>[data-action]{display:none}
+  .mobile-reader-screen .toolbar>[data-action="routes"],.mobile-reader-screen .toolbar>[data-action="genealogy"],.mobile-reader-screen .toolbar>[data-action="font-size"]{display:inline-flex;justify-content:center;align-items:center;min-height:40px;min-width:36px;margin:0}
+  .mobile-reader-screen .toolbar>.text-button{font-size:13px;letter-spacing:.05em;padding:8px 5px}
+  .mobile-reader-screen .toolbar>.font-toggle{height:34px;min-height:34px;width:34px;min-width:34px;font-size:20px;flex-shrink:0}
+  .mobile-reader-screen .toolbar-divider{display:none}
+  .mobile-reader-screen .mobile-tools-button{display:flex;align-items:center;justify-content:center;gap:4px;min-width:47px;min-height:40px;padding:6px 3px;font-size:13px;color:#75583d;flex-shrink:0}
+  .mobile-reader-screen .mobile-tools-button[aria-expanded="true"]{color:var(--red);border-bottom:1px solid var(--red)}
+  .mobile-reader-screen .mobile-tools-open .toolbar{position:absolute;top:43px;right:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:min(318px,100%);gap:3px 10px;padding:14px;background:#eee2c8;border:1px solid #a88b5c88;box-shadow:0 12px 25px #4b351f25;border-radius:2px;z-index:40}
+  .mobile-reader-screen .mobile-tools-open .toolbar>[data-action]{display:inline-flex;justify-content:center;align-items:center;min-width:0;min-height:42px;height:auto;font-size:13px;margin:0}
+  .mobile-reader-screen .mobile-tools-open .toolbar>.font-toggle{font-size:20px;width:auto}
+  .mobile-reader-screen .mobile-tools-open .toolbar>.fullscreen-toggle{display:none}
+  .mobile-reader-screen .open-book{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);align-items:stretch;width:min(510px,100%);height:100%;min-height:0;max-height:none;max-width:510px;filter:drop-shadow(0 6px 9px #4f3c1b1f);perspective:1000px}
+  .mobile-reader-screen .open-book::before{inset:2px -5px -5px;border-radius:3px}
+  .mobile-reader-screen .open-book::after{inset:1px -2px -2px;border-radius:3px}
+  .mobile-reader-screen .open-book>.page,.mobile-page-ghost{display:grid;grid-template-rows:auto minmax(0,1fr)auto;align-items:stretch;min-height:0;height:100%;padding:14px 19px 5px;border-radius:3px;overflow:hidden;min-width:0;background-color:#eee2c7;position:relative;border:1px solid #bba78155}
+  .mobile-reader-screen .open-book>.page.mobile-leaf-hidden{display:none!important}
+  .mobile-reader-screen .open-book>.page.mobile-leaf-active{z-index:2;transform-origin:center;backface-visibility:hidden}
+  .mobile-reader-screen .page-running{min-height:27px;padding:0 0 9px;font-size:9px;letter-spacing:.055em;line-height:1.7;gap:9px}
+  .mobile-reader-screen .page-running>span:last-child{text-align:right}
+  .mobile-reader-screen .leaf-content{display:flex;flex-direction:column;min-height:0;min-width:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;scroll-behavior:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:#987b4c77 transparent;padding-right:2px;scroll-padding:14px}
+  .mobile-reader-screen .leaf-content::-webkit-scrollbar{width:3px}
+  .mobile-reader-screen .leaf-content::-webkit-scrollbar-thumb{background:#987b4c66}
+  .mobile-reader-screen .leaf-content>*{flex-shrink:0}
+  .mobile-reader-screen .leaf-content:focus-visible{outline-offset:-2px}
+  .mobile-reader-screen .leaf-footer{display:flex;align-items:center;justify-content:flex-end;min-height:29px;padding:3px 0 0;margin:0;gap:7px;border:0!important}
+  .mobile-reader-screen .leaf-footer>.story-pagination,.mobile-reader-screen .leaf-footer>.page-number{display:none}
+  .mobile-reader-screen .leaf-footer .leaf-scroll-controls:not([hidden]){display:flex!important;align-items:center;gap:12px;margin:0;justify-content:flex-end;min-height:30px}
+  .mobile-reader-screen .leaf-footer .leaf-scroll-controls[hidden]{display:none!important}
+  .mobile-reader-screen .leaf-scroll-button{font-size:11px;min-height:30px;padding:3px 0;line-height:1.6}
+  .mobile-reader-screen .leaf-footer-action{display:grid;grid-template-columns:minmax(0,1fr);gap:3px;min-height:0;padding-top:8px}
+  .mobile-reader-screen .leaf-footer-action>.choose-role{grid-column:1;min-height:44px;margin:0;width:100%;font-size:14px;padding:9px 10px}
+  .mobile-reader-screen .leaf-footer-action .leaf-scroll-controls{justify-self:end}
+  .mobile-reader-screen .book-ribbon{right:13px;height:34px;width:15px;top:-3px;z-index:3}
+  .mobile-reader-screen .book-ribbon span{padding-top:9px;font-size:8px}
+  .mobile-reader-screen .book-base{display:none}
+  .mobile-reader-screen .mobile-directory-extras{display:block;margin:2px 0 12px;padding-top:9px;border-top:1px solid #997b4a44}
+  .mobile-reader-screen .mobile-bookmark{display:flex;align-items:center;justify-content:center;width:100%;min-height:44px;line-height:1.7;font-size:14px;color:var(--red);letter-spacing:.04em}
+  .mobile-reader-nav{display:flex;flex-direction:column;width:min(510px,100%);gap:3px;padding-top:2px;min-height:0;position:relative;z-index:6}
+  .mobile-reader-nav[hidden]{display:none}
+  .mobile-page-tabs{display:flex;align-items:stretch;justify-content:center;gap:4px;width:100%;border-bottom:1px solid #997b4a35}
+  .mobile-page-tabs button{display:flex;align-items:center;justify-content:center;gap:6px;flex:1;min-width:0;min-height:44px;padding:4px 2px;font-size:11px;line-height:1.6;letter-spacing:.02em;color:#8b7351;border-bottom:1px solid transparent}
+  .mobile-page-tabs button span{overflow-wrap:anywhere}
+  .mobile-page-tabs button i{width:4px;height:4px;border:1px solid #9e8258;transform:rotate(45deg);flex-shrink:0}
+  .mobile-page-tabs button[aria-pressed="true"]{color:var(--red);border-bottom-color:var(--red)}
+  .mobile-page-tabs button[aria-pressed="true"] i{background:var(--red);border-color:var(--red)}
+  .mobile-page-controls{display:grid;grid-template-columns:minmax(0,1fr)48px minmax(0,1fr);align-items:center;gap:7px;min-height:44px}
+  .mobile-page-controls button{min-height:44px;min-width:0;display:flex;align-items:center;gap:9px;padding:5px 7px;font-size:14px;line-height:1.6;color:var(--red);letter-spacing:.05em}
+  .mobile-page-controls .mobile-page-next{justify-content:flex-end;text-align:right}
+  .mobile-page-controls button:disabled{opacity:.38;color:#8b7351;cursor:default}
+  .mobile-page-controls button:not(:disabled):active{background:#9b78481c}
+  .mobile-page-controls .mobile-page-advance,.mobile-page-controls .mobile-page-retreat{font-size:13px;letter-spacing:.025em}
+  .mobile-page-position{font:15px var(--latin);color:#806545;text-align:center;letter-spacing:.08em}
+  .mobile-page-position i{font-style:normal;color:#b09a76;font-size:12px;margin:0 6px}
+  .mobile-page-ghost{position:absolute!important;inset:0;z-index:1;pointer-events:none;transform-origin:center;backface-visibility:hidden;contain:paint;will-change:transform;opacity:1}
+  .mobile-page-ghost .leaf-content{overflow:hidden!important}
+  .mobile-turning{overflow:clip}
+  .mobile-turning>.mobile-leaf-active{will-change:transform;pointer-events:none}
+  .mobile-reader-screen .story-opening{margin-top:15px;gap:14px}
+  .mobile-reader-screen .story-page .chapter-year{font-size:29px;margin-bottom:4px}
+  .mobile-reader-screen .story-page .chapter-page-heading h2{font-size:25px;line-height:1.5}
+  .mobile-reader-screen .story-page .chapter-date,.mobile-reader-screen .story-page .chapter-subtitle{font-size:12px;margin-top:4px}
+  .mobile-reader-screen .story-page .chapter-scene{max-width:310px}
+  .mobile-reader-screen .story-page .chapter-scene .art-reserve{height:158px;aspect-ratio:auto}
+  .mobile-reader-screen .story-section-title{font-size:22px;margin-bottom:12px}
+  .mobile-reader-screen .story-paragraph,.mobile-reader-screen .biography-prose{font-size:var(--reading-body);line-height:1.9;margin-bottom:17px}
+  .mobile-reader-screen .story-opening-continuation .chapter-page-heading{justify-content:flex-start;text-align:left}
+  .mobile-reader-screen .story-opening-continuation .chapter-year{font-size:21px}
+  .mobile-reader-screen .story-opening-continuation .chapter-page-heading h2{font-size:19px}
+  .mobile-reader-screen .role-frontispiece{padding-top:16px}
+  .mobile-reader-screen .role-portrait-heading{grid-template-columns:114px minmax(0,1fr);gap:15px;text-align:left;align-items:center}
+  .mobile-reader-screen .role-portrait-heading .role-arch.portrait-reserve,.mobile-reader-screen .role-portrait-heading .role-arch.portrait-reserve:has(img){width:114px;height:152px;max-width:114px;margin:0}
+  .mobile-reader-screen .role-portrait-heading .role-identity h2{font-size:23px;line-height:1.5;margin:6px 0}
+  .mobile-reader-screen .role-portrait-heading .role-identity .eyebrow{font-size:9px;letter-spacing:.04em}
+  .mobile-reader-screen .role-portrait-heading .role-identity .role-years{font-size:11px}
+  .mobile-reader-screen .role-portrait-heading .role-identity .role-epithet{font-size:12px;line-height:1.7}
+  .mobile-reader-screen .role-biography{margin-top:17px;padding-top:13px}
+  .mobile-reader-screen .selection-heading{font-size:27px;line-height:1.5;margin-top:16px}
+  .mobile-reader-screen .selection-intro{font-size:15px;line-height:1.8}
+  .mobile-reader-screen .role-grid{margin:17px 0 12px;gap:8px}
+  .mobile-reader-screen .role-card{min-height:91px;padding:10px}
+  .mobile-reader-screen .role-card strong{font-size:14px}
+  .mobile-reader-screen .role-card svg{width:23px;height:23px;margin-bottom:4px}
+  .mobile-reader-screen .fiction-note{font-size:12px;margin:8px 0}
+  .mobile-reader-screen .route-number{margin-top:15px;font-size:23px}
+  .mobile-reader-screen .route-heading{font-size:29px;line-height:1.5;margin:9px 0 12px}
+  .mobile-reader-screen .route-description{font-size:16px;line-height:1.9}
+  .mobile-reader-screen .route-witnesses{margin:18px 0;gap:13px 7px}
+  .mobile-reader-screen .route-witnesses svg{width:30px;height:30px}
+  .mobile-reader-screen .route-panorama{height:170px;margin:18px 0}
+  .mobile-reader-screen .route-button{min-height:44px;font-size:14px;margin-top:12px}
+  .mobile-reader-screen .route-footnote{font-size:11px;margin:10px 0 9px}
+  .mobile-reader-screen .genealogy-heading h1{font-size:26px}
+  .mobile-reader-screen .genealogy-tabs button{min-height:40px;font-size:12px}
+  .mobile-reader-screen .genealogy-tree-tools>span{font-size:11px}
+  .mobile-reader-screen .genealogy-person-heading.has-portrait{flex-direction:row;text-align:left}
+  .mobile-reader-screen .genealogy-portrait{width:111px;height:148px;max-width:40%}
+  .mobile-reader-screen .genealogy-person-heading h2{font-size:23px}
+  .mobile-reader-screen .genealogy-person-heading .eyebrow{font-size:10px}
+  .mobile-reader-screen .genealogy-detail{padding-top:16px}
+  .mobile-reader-screen .genealogy-return-tree{min-height:38px;font-size:13px;margin-top:5px}
+  .mobile-reader-screen .chronicle-frontispiece{padding-top:18px}
+  .mobile-reader-screen .chronicle-year{font-size:38px}
+  .mobile-reader-screen .chronicle-title{font-size:26px}
+  .mobile-reader-screen .chronicle-figure{margin:16px 0}
+  .mobile-reader-screen .chronicle-figure .art-reserve{height:180px}
+  .mobile-reader-screen .chronicle-marginal{margin-top:17px;padding-top:13px}
+  .mobile-reader-screen .chronicle-timeline-heading{margin-top:17px}
+  .mobile-reader-screen .ending-art{height:150px;margin-top:18px}
+  .mobile-reader-screen .ending-heading{font-size:27px}
+  .mobile-reader-screen .ending-role{font-size:27px;margin-top:20px}
+  .mobile-reader-screen .game-panel{flex:0 0 auto}
+  .mobile-reader-screen .interaction-page .game-panel{margin-top:16px}
+  .mobile-reader-screen .game-panel h3{font-size:23px}
+  .mobile-reader-screen .game-stakes{font-size:16px;line-height:1.85}
+  .mobile-reader-screen .choice-panel .game-stakes{font-size:var(--reading-body)}
+  .mobile-reader-screen .story-revelation{margin-top:18px;padding-bottom:8px}
+  .mobile-reader-screen .unrevealed-note{display:none}
+  .mobile-reader-screen .dialog{max-height:calc(100dvh - 32px)}
+  html.mobile-reader-open #toast{bottom:calc(104px + env(safe-area-inset-bottom));font-size:12px;padding:10px 15px}
+}
+@media(max-width:350px){
+  .mobile-reader-screen{padding-left:10px;padding-right:10px;gap:7px}
+  .mobile-reader-screen .open-book>.page,.mobile-page-ghost{padding-left:15px;padding-right:15px}
+  .mobile-reader-screen .toolbar{gap:6px}
+  .mobile-reader-screen .mobile-tools-button{font-size:12px;min-width:43px}
+  .mobile-page-tabs{gap:2px}
+  .mobile-page-tabs button{font-size:10px;gap:4px}
+  .mobile-page-controls button{font-size:13px;gap:6px;padding-left:3px;padding-right:3px}
+  .mobile-reader-screen .role-portrait-heading{grid-template-columns:99px minmax(0,1fr);gap:12px}
+  .mobile-reader-screen .role-portrait-heading .role-arch.portrait-reserve,.mobile-reader-screen .role-portrait-heading .role-arch.portrait-reserve:has(img){width:99px;height:132px;max-width:99px}
+  .mobile-reader-screen .role-portrait-heading .role-identity h2{font-size:21px}
+  .mobile-reader-screen .story-page .chapter-page-heading h2{font-size:23px}
+}
+@media(max-width:760px) and (max-height:650px){
+  .mobile-reader-screen{grid-template-rows:40px minmax(0,1fr)auto;gap:6px;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+  .mobile-reader-screen .reading-header{height:40px}
+  .mobile-reader-screen .open-book>.page,.mobile-page-ghost{padding-top:10px}
+  .mobile-reader-screen .page-running{min-height:23px;padding-bottom:6px}
+  .mobile-page-tabs button{min-height:44px}
+  .mobile-reader-screen .leaf-footer{min-height:27px}
+  .mobile-reader-screen .leaf-scroll-button{min-height:27px}
+  .mobile-reader-screen .story-page .chapter-scene .art-reserve{height:135px}
+}
+@media(prefers-reduced-motion:reduce){.mobile-page-ghost{display:none}}

@@ -1,0 +1,30 @@
+/* Private marginalia alongside the historical manuscript. */
+.decision-scene-date{color:#85613f;font-size:12px;line-height:1.7;margin:6px 0 13px}
+.choice-panel .game-stakes{font-size:var(--reading-body);line-height:1.85}
+.choice-panel .ma-decision-outcome h4{font-size:calc(var(--reading-body) + 1px)}
+.decision-echo{margin-top:19px;border-top:1px solid var(--line);padding-top:13px}
+.decision-echo>span{display:flex;align-items:center;gap:8px;color:var(--red);font-size:12px;letter-spacing:.06em}
+.decision-echo>span svg{width:15px;height:15px}
+.decision-echo p,.ending-manuscript p{font-size:17px;line-height:1.85;margin-top:9px;color:#69553f}
+.decision-echo .text-button{font-size:12px;padding-bottom:3px}
+.decision-ledger{padding:0;list-style:none;counter-reset:decisions}
+.decision-ledger>li{padding:24px 0;border-top:1px solid var(--line)}
+.decision-ledger-date{color:#8a6446;font-size:12px;line-height:1.8}
+.decision-ledger h3{font-size:21px;font-weight:400;margin:9px 0 13px;color:var(--red)}
+.decision-ledger p{font-size:17px;line-height:1.9;margin:9px 0}
+.decision-ledger .decision-ledger-choice{padding-left:13px;border-left:2px solid #a27d51;color:#562e2e}
+.decision-ledger-echo{font-size:16px;line-height:1.85;color:#6c5840;background:#9b74450a;padding:13px 15px;margin:12px 0}
+.decision-ledger details{margin-top:13px;font-size:13px;color:#75583b}
+.decision-ledger summary{cursor:pointer;line-height:1.9;padding:7px 0}
+.decision-ledger details p{font-size:16px}
+.ending-manuscript{margin:20px 0 6px;padding:16px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.ending-manuscript h3{font-size:21px;font-weight:400;color:var(--red);margin:9px 0}
+html[data-text-size="large"] .decision-echo p,html[data-text-size="large"] .ending-manuscript p,html[data-text-size="large"] .decision-ledger p{font-size:20px}
+@media(max-width:760px){
+  .reading-header{flex-wrap:wrap;justify-content:center;gap:8px}
+  .reading-header .brand-button{margin-right:auto}
+  .toolbar{gap:10px;max-width:100%;flex-wrap:wrap;justify-content:center}
+  .decision-echo p,.ending-manuscript p,.decision-ledger p{font-size:18px}
+  html[data-text-size="large"] .decision-echo p,html[data-text-size="large"] .ending-manuscript p,html[data-text-size="large"] .decision-ledger p{font-size:21px}
+  .decision-ledger>li{padding:19px 0}
+}

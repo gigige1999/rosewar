@@ -1,0 +1,60 @@
+/* Narrative leaves: a quiet reading rhythm, with the next leaf always in reach. */
+.story-section-title{font-size:21px;font-weight:400;line-height:1.65;letter-spacing:.035em;color:#663438;margin:0 0 12px}
+.story-section-title:focus,.role-biography:focus{outline:none}
+.story-paragraph,.biography-prose{font-size:var(--reading-body);line-height:1.85;letter-spacing:.012em;color:#49392d;text-align:left;overflow-wrap:break-word;margin:0 0 15px}
+.story-context-note{font-size:12px;line-height:1.8;color:#826d50;margin:16px 0 7px;padding-top:10px;border-top:1px solid #9f815433}
+.story-opening-continuation{display:block;margin:15px 0 0}
+.story-opening-continuation .chapter-scene,.story-opening-continuation .chapter-date,.story-opening-continuation .chapter-subtitle{display:none}
+.story-opening-continuation .chapter-page-heading{display:flex;align-items:baseline;gap:13px}
+.story-opening-continuation .chapter-year{font-size:23px;margin:0}
+.story-opening-continuation .chapter-page-heading h2{font-size:20px}
+.story-pagination{display:grid;grid-template-columns:minmax(0,1fr)auto minmax(0,1fr);align-items:center;gap:9px;width:100%;border-top:1px solid #9b784844;padding-top:5px}
+.story-pagination>span{font-size:12px;letter-spacing:.04em;line-height:1.7;color:#8a6d47;white-space:nowrap}
+.story-page-button{min-height:40px;font-size:14px;line-height:1.7;color:var(--red);padding:6px 0;text-align:left;white-space:nowrap}
+.story-page-button:last-child{text-align:right}
+.story-page-button:hover:not(:disabled){color:#a04d46;text-decoration:underline;text-underline-offset:5px}
+.story-page-button:disabled{color:#a18b6a;opacity:.65;cursor:default}
+.leaf-footer.leaf-footer-paged{display:grid;grid-template-columns:auto minmax(0,1fr);gap:1px 12px;padding-top:5px;border-top:0}
+.leaf-footer-paged .story-pagination{grid-column:1/-1}
+.leaf-footer-paged .leaf-scroll-controls{justify-self:end;gap:12px}
+.leaf-footer-paged .page-number{min-height:22px;display:flex;align-items:center}
+.role-biography{text-align:left;border-top:1px solid #9b784833;margin-top:20px;padding-top:14px}
+.biography-label{display:block;font-size:12px;letter-spacing:.08em;line-height:1.8;color:#896b46;margin-bottom:9px}
+.biography-prose{margin-bottom:9px}
+.route-base .resume-bookmark{color:var(--red);display:flex;align-items:center;justify-content:center;gap:7px;text-align:center}
+.route-base .resume-bookmark svg{width:15px;height:15px;flex-shrink:0}
+.reading-book .book-navigation{gap:18px}
+@media(min-width:761px){
+  .route-base>.micro{flex-shrink:0}
+  .route-base>[data-action="about"]{flex-shrink:0}
+  .toolbar{gap:14px}
+}
+@media(min-width:761px) and (max-height:700px){
+  .story-section-title{font-size:20px;margin-bottom:9px}
+  .role-biography{margin-top:16px;padding-top:11px}
+}
+@media(min-width:761px) and (max-width:1000px){
+  .toolbar{gap:10px}
+  .reading-header .brand-button span{display:none}
+  .route-base .micro{font-size:11px}
+  .route-base .resume-bookmark{font-size:12px}
+}
+@media(max-width:760px){
+  .story-paragraph,.biography-prose{line-height:1.95;margin-bottom:18px}
+  .story-section-title{font-size:23px;line-height:1.7;margin-bottom:14px}
+  .story-context-note{font-size:13px}
+  .story-opening-continuation .chapter-page-heading{justify-content:center;flex-wrap:wrap;gap:7px 12px}
+  .story-opening-continuation .chapter-page-heading h2{font-size:22px}
+  .leaf-footer.leaf-footer-paged{margin-top:7px}
+  .story-pagination{gap:6px}
+  .story-page-button{font-size:13px;min-height:44px}
+  .story-pagination>span{font-size:11px}
+  .role-biography{margin-top:24px;padding-top:17px}
+  .biography-label{font-size:13px}
+  .route-base{align-items:center;justify-content:space-between}
+  .route-base .resume-bookmark{order:-1;width:100%;min-height:44px;padding:9px 0;border-bottom:1px solid #9b784844}
+}
+@media(max-width:350px){
+  .story-page-button{font-size:12px}
+  .story-pagination>span{font-size:10px;letter-spacing:0}
+}

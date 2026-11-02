@@ -1,0 +1,40 @@
+/* Original vector illuminations and the uninterrupted chronicle route. */
+.chronicle-page{padding-top:26px;padding-bottom:26px;min-height:850px}
+.chronicle-frontispiece{display:flex;flex-direction:column;align-items:center;text-align:center;flex:1;padding-top:24px}
+.chronicle-overline{font-size:12px;line-height:1.8;letter-spacing:.15em;color:#806344}
+.chronicle-year{font:54px var(--latin);letter-spacing:.1em;color:#702b34;margin-top:12px;line-height:1.2}
+.chronicle-figure{margin:12px 0 20px;width:100%;max-width:450px}
+.chronicle-art{display:block;width:100%;height:auto;overflow:visible}
+.chronicle-figure figcaption{font-size:14px;line-height:1.9;color:#795b42;margin-top:8px;padding:0 12px}
+.chronicle-title{font-size:27px;font-weight:400;line-height:1.65;letter-spacing:.08em;margin:0}
+.chronicle-date{font-size:13px;letter-spacing:.08em;line-height:1.8;color:#886942;margin:8px 0 0}
+.chronicle-marginal{font-size:14px;line-height:1.95;color:#7e654b;text-align:justify;margin:24px 0 0;max-width:340px;border-top:1px solid #94744745;padding-top:17px}
+.chronicle-marginal:before{content:'✧';display:block;text-align:center;color:#8d653e;margin:-30px auto 7px;width:34px;background:#eddfc1;font-size:18px}
+.chronicle-timeline-heading{margin:24px 0 20px}
+.chronicle-timeline-heading h3{font-size:25px;font-weight:400;letter-spacing:.13em;color:#542e2e;line-height:1.6;margin:0}
+.chronicle-timeline-heading>p{font-size:13px;color:#856747;line-height:1.8;margin-top:4px}
+.chronicle-timeline{padding:0 0 0 11px;list-style:none;margin:0}
+.chronicle-event{position:relative;border-left:1px solid #9d7c4d70;padding:0 0 0 20px}
+.chronicle-event:before{content:'';position:absolute;left:-4px;top:19px;width:7px;height:7px;background:#eee1c4;border:1px solid #927047;transform:rotate(45deg);transition:background .2s}
+.chronicle-event.is-current:before{background:#702b34;border-color:#702b34;outline:3px solid #eee1c4;box-shadow:0 0 0 4px #702b3444}
+.chronicle-node{display:flex;width:100%;align-items:center;gap:12px;min-height:43px;padding:9px 0;text-align:left;border-bottom:1px solid #98784730;color:#66523b}
+.chronicle-node:hover{color:#7e2934}.chronicle-node:focus-visible{outline:2px solid #7e2934;outline-offset:4px}
+.chronicle-node-year{font:19px var(--latin);letter-spacing:.04em;color:#7d3e3d;flex:0 0 43px}
+.chronicle-node-title{font-size:14px;line-height:1.65;flex:1}
+.chronicle-node-mark{font:19px var(--latin);color:#886b45}
+.chronicle-event.is-current .chronicle-node{border-bottom:0;color:#592d2e;padding-bottom:10px}
+.chronicle-event.is-current .chronicle-node-title{font-size:16px;color:#702b34}
+.chronicle-event.is-current .chronicle-node-year{font-size:23px}
+.chronicle-event-content{padding:0 0 16px;animation:soft-in .45s ease}
+.chronicle-event-content[hidden]{display:none}
+.chronicle-event-content>p{font-size:17px;line-height:1.95;letter-spacing:.025em;text-align:justify;color:#48372b;margin:0 0 13px}
+.chronicle-event-content>p:first-child:first-letter{float:left;font-size:35px;line-height:1.4;color:#702b34;margin-right:5px}
+.chronicle-consequence{border-top:1px solid #9978493d;padding:10px 0 1px;display:flex;align-items:baseline;gap:11px}
+.chronicle-consequence>span{font-size:12px;letter-spacing:.12em;color:#7b3038;flex-shrink:0}
+.chronicle-consequence>p{font-size:14px;line-height:1.8;color:#795a3e;margin:0}
+.chronicle-reader-note{font-size:12px;line-height:1.9;color:#8a7051;text-align:center;margin:20px 0 0}
+.chronicle-page .page-number{font-size:12px;padding-top:25px}
+@media(min-width:1500px){.chronicle-event-content>p{font-size:18px}.chronicle-page{min-height:900px}.chronicle-figure{max-width:470px}.chronicle-frontispiece{padding-top:30px}}
+@media(max-width:1050px) and (min-width:761px){.chronicle-page{padding-left:27px;padding-right:27px;min-height:930px}.chronicle-title{font-size:23px}.chronicle-node{gap:8px}.chronicle-event{padding-left:15px}.chronicle-node-title{font-size:13px}.chronicle-event.is-current .chronicle-node-title{font-size:14px}.chronicle-event-content>p{font-size:17px;line-height:1.95}.chronicle-marginal{font-size:13px}.chronicle-figure figcaption{font-size:13px}}
+@media(max-width:760px){.chronicle-page{min-height:0;padding:24px 26px}.chronicle-frontispiece{padding-top:20px}.chronicle-overline{font-size:12px}.chronicle-year{font-size:47px}.chronicle-figure{max-width:365px;margin-top:5px;margin-bottom:16px}.chronicle-title{font-size:25px}.chronicle-marginal{font-size:14px;max-width:none;margin-top:25px}.chronicle-page.left-page .page-number{display:none}.chronicle-page.right-page{padding-top:25px}.chronicle-timeline-heading{margin-top:18px}.chronicle-node{min-height:49px;gap:10px}.chronicle-node-title{font-size:14px}.chronicle-event{padding-left:17px}.chronicle-event:before{top:23px}.chronicle-event-content>p{font-size:18px;line-height:1.95}.chronicle-consequence>p{font-size:15px}.chronicle-reader-note{font-size:13px}.chronicle-figure figcaption{font-size:14px}}
+@media(max-width:350px){.chronicle-page{padding:23px 20px}.chronicle-title{font-size:22px}.chronicle-node-title{font-size:13px}.chronicle-node{gap:7px}.chronicle-event{padding-left:13px}.chronicle-event-content>p{font-size:17px}.chronicle-event.is-current .chronicle-node-title{font-size:14px}}
