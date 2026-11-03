@@ -17,6 +17,7 @@ const state = page => page.evaluate(key => JSON.parse(localStorage.getItem(key))
 const mobileIndex = page => page.locator('.mobile-reader-nav').getAttribute('data-mobile-page').then(Number);
 const members = nodes => nodes.flatMap(node => [node.person, ...(node.spouse ? [node.spouse] : []), ...members(node.children || [])]);
 const guideMembers = sheet => [...new Set(sheet.groups.flatMap(group => members(group.roots)))];
+const houseNames = {plantagenet:'金雀花王室',lancaster:'兰开斯特',york:'约克',neville:'内维尔',beaufort:'博福特',tudor:'都铎',mortimer:'莫蒂默',woodville:'伍德维尔'};
 async function settle(page) {
   await page.waitForTimeout(180);
   await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
@@ -216,10 +217,30 @@ async function freshPage(browser, options = {}) {
       for (const id of expected) {
         await person(page, id);
         assert.ok((await page.locator('.genealogy-detail').innerText()).includes(data.people[id].bio), 'complete biography for ' + id);
+        const card = page.locator('.genealogy-person[data-person="' + id + '"]').first();
+        assert.equal(await card.getAttribute('data-house'), data.people[id].house, id + ': selection retains the family identity');
+        assert.equal(await card.getAttribute('aria-pressed'), 'true');
+        assert.equal(await card.locator('.genealogy-seal-portrait').count(), 1, id + ': person has a human icon');
+        assert.equal(await card.locator('.genealogy-seal-mark').count(), 1, id + ': family has a symbol');
+        const badge = card.locator('.genealogy-house-badge');
+        assert.equal((await badge.innerText()).trim(), houseNames[data.people[id].house], id + ': family is written out, not colour alone');
+        const visible = await badge.evaluate(node => {
+          const r = node.getBoundingClientRect(), style = getComputedStyle(node);
+          return r.width > 0 && r.height > 0 && style.visibility !== 'hidden' && style.display !== 'none';
+        });
+        assert.ok(visible, id + ': family label remains rendered after selection');
         visited.add(id);
       }
     }
     assert.equal(visited.size, 42);
+    await detailSheet(page, 3); await person(page, 'warwick');
+    assert.match(await page.locator('.genealogy-allegiance').innerText(), /约克[\s\S]*兰开斯特[\s\S]*1461[\s\S]*1470/, 'Warwick belongs to Neville while his alliance changes over time');
+    await shot(page, 'warwick-house-and-allegiance');
+    await person(page, 'anneNeville');
+    assert.match(await page.locator('.genealogy-allegiance').innerText(), /内维尔[\s\S]*1470[\s\S]*兰开斯特[\s\S]*1472[\s\S]*约克/, 'Anne retains her own family and her sequential marriages are explained');
+    await detailSheet(page, 2); await person(page, 'elizabethYork');
+    assert.equal(await page.locator('.genealogy-person[data-person="elizabethYork"]').first().getAttribute('data-house'), 'york');
+    assert.match(await page.locator('.genealogy-allegiance').innerText(), /约克公主[\s\S]*都铎王后[\s\S]*1486[\s\S]*出身仍是约克/, 'Elizabeth’s dynasty of birth is distinct from her marriage');
     await detailSheet(page, 1); await person(page, 'joanBeaufort');
     const joanFamily = await page.locator('.genealogy-close-family').innerText();
     assert.match(joanFamily, /父亲[\s\S]*冈特的约翰/, 'Joan has her father in the structured relationship list');

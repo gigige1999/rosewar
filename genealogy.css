@@ -1,4 +1,12 @@
 /* The family register uses the same ink and ruled parchment as the narrative. */
+[data-house="plantagenet"]{--family-ink:#866524;--family-wash:#a7863320}
+[data-house="lancaster"]{--family-ink:#893e4a;--family-wash:#933d4c13}
+[data-house="york"]{--family-ink:#566b7a;--family-wash:#f8f3e396}
+[data-house="neville"]{--family-ink:#775971;--family-wash:#7b5e7314}
+[data-house="beaufort"]{--family-ink:#876738;--family-wash:#99753b19}
+[data-house="tudor"]{--family-ink:#4d6b57;--family-wash:#54715b16}
+[data-house="mortimer"]{--family-ink:#5d7581;--family-wash:#58798b13}
+[data-house="woodville"]{--family-ink:#6b7041;--family-wash:#777c4715}
 .genealogy-mode{display:flex;gap:15px;flex-wrap:wrap;border-bottom:1px solid #98764c44;margin-top:7px}
 .genealogy-mode button{font-size:13px;min-height:43px;letter-spacing:0;padding:8px 0;color:#8a6e4c}
 .genealogy-mode button[aria-pressed="true"]{color:var(--red);border-bottom-color:var(--red)}
@@ -228,4 +236,49 @@ html[data-text-size="large"] .genealogy-name{font-size:18px}
   .genealogy-guide-page .guide-family-group>h3{font-size:16px}
   .genealogy-guide-page .guide-relationship-label{font-size:14px}
   .genealogy-guide-page .guide-descent{font-size:14px}
+}
+/* Engraved people and named house marks keep colour meaningful in every tree. */
+.genealogy-person[data-house]{display:grid;grid-template-columns:34px minmax(0,1fr);align-items:center;gap:8px;border-color:#9d805654;border-left:2px solid var(--family-ink);background:linear-gradient(115deg,var(--family-wash),#dccda41a);color:#513d2d;transition:border-color .18s,background .18s,box-shadow .18s}
+.genealogy-person[data-house]:hover{border-color:var(--family-ink);background:var(--family-wash)}
+.genealogy-person[data-house][aria-pressed="true"]{border-color:var(--family-ink);background:var(--family-wash);color:#442f29;box-shadow:inset 0 0 0 1px var(--family-ink)}
+.genealogy-person[data-house]>i{color:var(--family-ink);right:5px;top:5px;font-size:8px}
+.genealogy-person-seal{display:block;color:var(--family-ink);align-self:center;width:34px;filter:drop-shadow(0 1px 0 #fff8)}
+.genealogy-person-seal svg{width:100%;height:auto}
+.genealogy-person-copy{display:flex;flex-direction:column;gap:3px;min-width:0}
+.genealogy-person-copy .genealogy-kin-label{color:var(--family-ink);font-size:11px}
+.genealogy-person-copy .genealogy-name{display:block;padding-right:0;line-height:1.5}
+.genealogy-person-meta{display:flex;align-items:center;flex-wrap:wrap;gap:1px 5px;font-size:11px;line-height:1.65;letter-spacing:0;color:#796044}
+.genealogy-house-badge{display:inline-flex;align-items:center;gap:4px;color:var(--family-ink);font-size:12px;line-height:1.7;white-space:nowrap}
+.genealogy-house-badge svg{width:16px;height:16px}
+.genealogy-person-meta .genealogy-house-badge{font-size:11px;gap:3px}
+.genealogy-person-meta .genealogy-house-badge svg{width:13px;height:13px}
+.genealogy-short-identity::before{content:'·';padding-right:5px;color:#9d8056}
+.genealogy-person-effigy{width:82px;flex-shrink:0;color:var(--family-ink);filter:drop-shadow(0 1px 0 #fff9)}
+.genealogy-person-effigy svg{width:100%;height:auto}
+.genealogy-person-heading .genealogy-house-badge{display:flex;margin-top:7px;font-size:14px}
+.genealogy-person-heading .genealogy-house-badge svg{width:21px;height:21px}
+.genealogy-family-origin{font-size:14px;line-height:1.9;color:#806549;margin:-7px 0 20px}
+.genealogy-allegiance{border-left:2px solid var(--family-ink);padding:10px 14px;margin:0 0 22px;background:linear-gradient(90deg,var(--family-wash),transparent)}
+.genealogy-allegiance h3{font-size:12px;font-weight:400;letter-spacing:.12em;color:var(--family-ink);margin:0 0 5px}
+.genealogy-allegiance p{font-size:var(--reading-body);line-height:1.85;color:#594532}
+.genealogy-houses{margin:0 0 21px;border-bottom:1px solid #98764c44;padding-bottom:12px}
+.genealogy-house-key{display:flex;flex-wrap:wrap;gap:9px 22px}
+.genealogy-house-key .genealogy-house-badge{font-size:14px;gap:7px}
+.genealogy-house-key .genealogy-house-badge svg{width:22px;height:22px}
+.genealogy-houses>p{font-size:12px;line-height:1.8;color:#8a7050;margin-top:9px}
+@media(min-width:761px){
+  .genealogy-tree-overview .genealogy-children .genealogy-person[data-house]{display:flex;flex-direction:column;gap:5px}
+  .genealogy-tree-overview .genealogy-children .genealogy-person-meta{justify-content:center}
+}
+@media(min-width:1101px){
+  .genealogy-guide-page .guide-family-tree .genealogy-person[data-house]{gap:7px;grid-template-columns:31px minmax(0,1fr);padding:6px 7px}
+  .genealogy-guide-page .genealogy-person-seal{width:31px}
+  .genealogy-guide-page .genealogy-person-copy{gap:2px}
+}
+@media(max-width:760px){
+  .genealogy-person[data-house]{grid-template-columns:39px minmax(0,1fr);gap:10px;padding:9px 10px;min-height:72px}
+  .genealogy-person-seal{width:39px}
+  .genealogy-person-meta,.genealogy-person-meta .genealogy-house-badge{font-size:12px}
+  .genealogy-person-meta .genealogy-house-badge svg{width:15px;height:15px}
+  .genealogy-family-origin{font-size:15px}
 }
