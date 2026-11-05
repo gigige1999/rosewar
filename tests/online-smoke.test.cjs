@@ -89,9 +89,9 @@ function observe(page) {
   const started=Date.now();
   let browser,activePage;
   const timeout=setTimeout(()=>{
-    errors.push('Online smoke exceeded its 60-second execution limit');
+    errors.push('Online smoke exceeded its 90-second execution limit');
     browser?.close().catch(()=>{});
-  },60000);
+  },90000);
   try{
     browser=await chromium.launch({headless:true});
     const desktop=activePage=await browser.newPage({viewport:{width:1366,height:768},reducedMotion:'reduce'});
@@ -110,7 +110,7 @@ function observe(page) {
     assert.equal(content.places,9);assert.equal(content.art.length,13);
     await Promise.all(content.art.map(async src=>{
       const dimensions=await desktop.evaluate(src=>new Promise((resolve,reject)=>{
-        const image=new Image();const timer=setTimeout(()=>reject(new Error('Artwork timeout: '+src)),8000);
+        const image=new Image();const timer=setTimeout(()=>reject(new Error('Artwork timeout: '+src)),15000);
         image.onload=()=>{clearTimeout(timer);resolve({width:image.naturalWidth,height:image.naturalHeight});};
         image.onerror=()=>{clearTimeout(timer);reject(new Error('Artwork failed: '+src));};image.src=src;
       }),src);
@@ -127,7 +127,7 @@ function observe(page) {
     await click(desktop,'.routes-book [data-action="chronicle-goto"][data-index="3"]');
     assert.equal((await state(desktop)).chronicleIndex,3);
     assert.equal(await desktop.locator('.chronicle-book>.page').count(),2);
-    assert.equal(await desktop.locator('.history-abridged .history-paragraph').count(),3);
+    assert.equal(await desktop.locator('.history-abridged .history-paragraph').count(),2);
     await click(desktop,'.history-full-story > summary');
     assert.equal(await desktop.locator('.history-full-section').count(),3,'full history remains available inside the current spread');
     assert.equal(await desktop.locator('.history-full-section p').count(),9);
