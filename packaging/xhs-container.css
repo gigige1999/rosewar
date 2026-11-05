@@ -15,7 +15,7 @@ img{max-width:100%}
 @media(max-width:760px){
   .mobile-reader-screen{height:100vh;height:100dvh;padding:calc(5px + var(--xhs-safe-top)) max(12px,var(--xhs-safe-right)) calc(5px + var(--xhs-safe-bottom)) max(12px,var(--xhs-safe-left))}
   .leaf-content{touch-action:pan-y}
-  html.mobile-reader-open #toast{bottom:calc(104px + var(--xhs-safe-bottom))}
+  html.mobile-reader-open #toast{bottom:calc(62px + var(--xhs-safe-bottom))}
   .cover-quiet{padding-left:max(22px,var(--xhs-safe-left));padding-right:max(22px,var(--xhs-safe-right))}
   .cover-language{top:calc(17px + var(--xhs-safe-top));right:max(22px,var(--xhs-safe-right))}
 }

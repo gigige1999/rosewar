@@ -18,9 +18,24 @@ async function open(page) {
   await click(page,'.closed-book');
   await page.locator('.routes-book').waitFor();
 }
+async function turn(page,direction=1) {
+  const selector=page.viewportSize().width<=760
+    ? '.mobile-reader-nav .mobile-page-'+(direction>0?'next':'previous')
+    : '.book-base [data-action="reader-'+(direction>0?'next':'previous')+'"]';
+  await click(page,selector);
+}
 async function leaf(page,target) {
-  await click(page,'.mobile-reader-nav [data-mobile-index="'+target+'"]');
+  assert.ok(target===0||target===1,'a chapter has two physical leaves');
+  if(await index(page)!==target)await turn(page,target?1:-1);
   assert.equal(await index(page),target);
+}
+async function action(page,name) {
+  let control=page.locator('[data-action="'+name+'"]:visible').first();
+  if(!await control.count()) {
+    await click(page,'[data-action="mobile-tools"]');
+    control=page.locator('[data-action="'+name+'"]:visible').first();
+  }
+  await control.click();await stable(page);
 }
 async function snapshot(page,name) {
   const file='live-history-'+name+'.png';
@@ -37,6 +52,8 @@ async function viewport(page,label) {
       leaves:visible.map(n=>({inert:n.inert,w:n.querySelector('.leaf-content').clientWidth,sw:n.querySelector('.leaf-content').scrollWidth}))};
   });
   assert.equal(geometry.leaves.length,1,label+': one physical mobile leaf');
+  assert.equal(await page.locator('.mobile-reader-nav button:visible').count(),2,label+': one pair of page controls');
+  assert.equal(await page.locator('.mobile-page-tabs,.mobile-reader-context,[data-mobile-index]').count(),0,label+': no competing page controls');
   assert.equal(geometry.leaves[0].inert,false);
   assert.ok(geometry.documentWidth<=geometry.width+1,label+': no document overflow');
   assert.ok(geometry.leaves.every(n=>n.sw<=n.w+2),label+': no clipped horizontal text');
@@ -105,90 +122,102 @@ function observe(page) {
     await snapshot(desktop,'cover-desktop');
     await open(desktop);
     assert.match(await desktop.locator('.routes-book .history-introduction h1').innerText(),/为什么叫作玫瑰战争/);
-    assert.equal(await desktop.locator('.routes-book .left-page [data-action="chronicle-goto"]').count(),7);
+    assert.equal(await desktop.locator('.routes-book .right-page [data-action="chronicle-goto"]').count(),7);
     await snapshot(desktop,'overview-desktop');
     await click(desktop,'.routes-book [data-action="chronicle-goto"][data-index="3"]');
-    for(let pageNumber=0;pageNumber<3;pageNumber++){
-      assert.equal((await state(desktop)).chronicleIndex,3);
-      assert.equal((await state(desktop)).chroniclePages[3]||0,pageNumber);
-      assert.equal(await desktop.locator('.history-reading-copy p').count(),3);
-      assert.match(await desktop.locator('.history-part-label').innerText(),new RegExp('详读 '+(pageNumber+1)+' / 3'));
-      if(pageNumber<2)await click(desktop,'.history-pagination [data-action="chronicle-page-next"]');
-    }
+    assert.equal((await state(desktop)).chronicleIndex,3);
+    assert.equal(await desktop.locator('.chronicle-book>.page').count(),2);
+    assert.equal(await desktop.locator('.history-abridged .history-paragraph').count(),3);
+    await click(desktop,'.history-full-story > summary');
+    assert.equal(await desktop.locator('.history-full-section').count(),3,'full history remains available inside the current spread');
+    assert.equal(await desktop.locator('.history-full-section p').count(),9);
     await snapshot(desktop,'1483-desktop');
-    await click(desktop,'.atlas-place-list [data-place="london"]');
-    assert.match(await desktop.locator('.atlas-place-detail').innerText(),/1483/);
-    assert.equal(await desktop.locator('.atlas-place-list [data-place="london"]').getAttribute('aria-pressed'),'true');
-    await click(desktop,'.atlas-place-list [data-place="dublin"]');
-    assert.match(await desktop.locator('.atlas-other-year').innerText(),/1487[\s\S]*1483/);
-    assert.match(await desktop.locator('.atlas-place-detail').innerText(),/西姆内尔/);
+    await turn(desktop,1);
+    assert.equal((await state(desktop)).chronicleIndex,4,'desktop next turns the whole spread to 1485');
+    await turn(desktop,-1);
+    assert.equal((await state(desktop)).chronicleIndex,3);
+    await click(desktop,'[data-action="history-map"]');
+    await desktop.locator('dialog.atlas-dialog[open]').waitFor();
+    assert.equal(await desktop.locator('dialog .atlas-place-list [data-action="atlas-place"]').count(),9);
+    await click(desktop,'dialog .atlas-place-list [data-place="london"]');
+    assert.match(await desktop.locator('dialog .atlas-place-detail').innerText(),/1483/);
+    assert.equal(await desktop.locator('dialog .atlas-place-list [data-place="london"]').getAttribute('aria-pressed'),'true');
+    await click(desktop,'dialog .atlas-place-list [data-place="dublin"]');
+    assert.match(await desktop.locator('dialog .atlas-other-year').innerText(),/1487[\s\S]*1483/);
+    assert.match(await desktop.locator('dialog .atlas-place-detail').innerText(),/西姆内尔/);
     await snapshot(desktop,'map-dublin-desktop');
-    await click(desktop,'.atlas-place-detail [data-action="chronicle-goto"]');
-    assert.equal((await state(desktop)).chronicleIndex,6,'Dublin cross-year link opens 1487');
-    assert.equal((await state(desktop)).chroniclePages[6]||0,0);
-    checks.push('Desktop opens with history; 1483 three-page narrative; London and Dublin details; cross-year jump to 1487');
+    await click(desktop,'dialog .atlas-place-detail [data-action="chronicle-goto"]');
+    assert.equal((await state(desktop)).chronicleIndex,6,'Dublin cross-year link opens the 1487 spread');
+    assert.equal(await desktop.locator('dialog[open]').count(),0);
+    checks.push('Desktop history-first overview; one spread per milestone; retained full history; London/Dublin map dialog and cross-year jump');
     await desktop.close();
 
     const mobile=activePage=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true,reducedMotion:'reduce'});
     observe(mobile);
     const client=await mobile.context().newCDPSession(mobile);
     await mobile.goto(url,{waitUntil:'domcontentloaded'});await open(mobile);
+    await turn(mobile,1);
+    assert.equal(await index(mobile),1,'overview turns from introduction to illustrated timeline');
     await click(mobile,'.routes-book [data-action="chronicle-goto"][data-index="3"]');
-    await swipe(mobile,client,'.history-reading-copy p',-125);
-    assert.equal(await index(mobile),1,'real horizontal touch advances historical prose');
-    await click(mobile,'.mobile-reader-nav [data-mobile-action="chapter-previous"]');
-    assert.equal((await state(mobile)).chronicleIndex,2,'persistent previous section returns to 1471');
     assert.equal(await index(mobile),0);
-    await leaf(mobile,1);
+    await swipe(mobile,client,'.history-spread-summary',-125);
+    assert.equal(await index(mobile),1,'real horizontal touch turns illustration to story');
+    await turn(mobile,-1);
+    assert.equal(await index(mobile),0);
+    await turn(mobile,-1);
+    assert.equal((await state(mobile)).chronicleIndex,2,'previous from the opening returns to the preceding milestone');
+    assert.equal(await index(mobile),1,'backward chapter turn lands on its right leaf');
     const historicalBookmark=await state(mobile);
     await click(mobile,'.toolbar [data-action="genealogy"]');
     await click(mobile,'.genealogy-person:visible');
     assert.equal(await index(mobile),1);
-    await click(mobile,'.mobile-reader-nav [data-mobile-action="back"]');
+    await click(mobile,'.reading-header [data-action="reader-back"]');
     assert.equal(await index(mobile),0,'person back returns to family diagram');
-    await click(mobile,'.mobile-reader-nav [data-mobile-action="back"]');
+    await click(mobile,'.reading-header [data-action="reader-back"]');
     await mobile.locator('.chronicle-book').waitFor();
-    assert.equal(await index(mobile),1,'family back restores historical prose page');
+    assert.equal(await index(mobile),1,'family back restores original historical leaf');
     const returned=await state(mobile);
     assert.equal(returned.mode,'chronicle');assert.equal(returned.chronicleIndex,historicalBookmark.chronicleIndex);
-    assert.equal(returned.chroniclePages[2],historicalBookmark.chroniclePages[2]);
+    assert.equal(returned.chronicleSide,historicalBookmark.chronicleSide);
     await viewport(mobile,'historical return');await snapshot(mobile,'prose-mobile');
-    checks.push('390px real touch page turn, persistent previous milestone and nested family return restore original history leaf');
+    checks.push('390px real touch, previous spread landing on its right leaf and top family back restore original historical page');
 
-    await leaf(mobile,3);
-    await click(mobile,'.history-year-index [data-action="chronicle-goto"][data-index="6"]');
+    await action(mobile,'routes');await turn(mobile,1);
+    await click(mobile,'.history-milestones [data-action="chronicle-goto"][data-index="6"]');
     assert.equal(await index(mobile),0);
-    await leaf(mobile,3);
+    await turn(mobile,1);
     await click(mobile,'.history-mission-invitation [data-action="roles"]');
+    assert.equal(await index(mobile),0,'roles opens on its illustrated introduction');
+    await turn(mobile,1);
     await click(mobile,'[data-action="preview-role"][data-role="edward"]:visible');
-    assert.equal(await index(mobile),1);
-    await leaf(mobile,3);await click(mobile,'.mobile-reader-nav [data-mobile-action="advance"]');
+    assert.equal(await index(mobile),0,'selecting a portrait returns to that introduction');
+    await turn(mobile,1);await turn(mobile,1);
     await mobile.locator('.reading-book').waitFor();
     const begun=await state(mobile);
     assert.equal(begun.role,'edward');assert.equal(begun.chapter,0);assert.equal(await index(mobile),0);
-    await leaf(mobile,2);
+    await leaf(mobile,1);
     await click(mobile,'[data-game-action="choose-option"]');
     assert.equal(await mobile.locator('.ma-inner-voice').count(),1,'choice preview reveals character psychology');
     const draft=await state(mobile);
-    assert.equal(await mobile.locator('[data-mobile-action="chapter-next"]').isDisabled(),true,'an unconfirmed preview cannot finish a chapter');
+    assert.equal(await mobile.locator('.mobile-reader-nav .mobile-page-next').isDisabled(),true,'an unconfirmed preview cannot finish a chapter');
     await mobile.evaluate(()=>{window.__smokeGame=document.querySelector('.game-board');});
     await swipe(mobile,client,'.ma-inner-voice',125);
-    assert.equal(await index(mobile),1,'character psychology text can swipe back to story');
-    await leaf(mobile,2);
+    assert.equal(await index(mobile),0,'character psychology text can swipe back to the left story leaf');
+    await leaf(mobile,1);
     assert.equal(await mobile.evaluate(()=>window.__smokeGame===document.querySelector('.game-board')),true,'page turns keep the live activity DOM');
     assert.deepEqual((await state(mobile)).games,draft.games,'page turns preserve the choice draft');
     await mobile.reload({waitUntil:'domcontentloaded'});await open(mobile);
-    await click(mobile,'[data-action="mobile-resume"]:visible');
-    assert.equal(await index(mobile),2,'reload restores interaction leaf');
+    await action(mobile,'resume-bookmark');
+    assert.equal(await index(mobile),1,'reload restores the right interaction leaf');
     const restored=await state(mobile);
     assert.equal(restored.role,'edward');assert.equal(restored.chapter,0);
     assert.deepEqual(restored.games,draft.games,'reload restores unconfirmed choice');
     assert.deepEqual(restored.completed,draft.completed);
     await viewport(mobile,'restored decision');await snapshot(mobile,'draft-mobile');
-    checks.push('Final milestone → character mission → Edward chapter one; psychology preview, reverse touch, live DOM, draft and leaf survive turns/reload');
+    checks.push('Final milestone → two-page character selection → Edward chapter one; psychology preview, reverse touch, live DOM and choice draft survive reload');
     assert.deepEqual(errors,[],'no runtime or HTTP resource errors');
     fs.writeFileSync(path.join(output,'live-history-report.json'),JSON.stringify({url,checkedAt:new Date().toISOString(),durationMs:Date.now()-started,content:{milestones:7,pages:21,places:9},assets,checks,screenshots,errors},null,2));
-    console.log('PASS online history-first book, 21 pages, 9 map places, 13 paintings, cross-year reading, mobile swipe/back and mission draft recovery; 0 errors');
+    console.log('PASS online unified spreads, retained 21 history sections, 9 map places, 13 paintings, mobile swipe/back and mission draft recovery; 0 errors');
   }catch(error){
     if(activePage&&!activePage.isClosed())await activePage.screenshot({path:path.join(output,'live-history-failure.png'),timeout:1500}).catch(()=>{});
     fs.writeFileSync(path.join(output,'live-history-failure.json'),JSON.stringify({url,checkedAt:new Date().toISOString(),durationMs:Date.now()-started,checks,errors,failure:error.stack},null,2));

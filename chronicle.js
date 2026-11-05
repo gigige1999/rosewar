@@ -80,24 +80,60 @@
   const running = (title, number) => `<div class="page-running"><span>${escape(title)}</span><span>${escape(number)}</span></div>`;
   const roleNames = {margaret:'安茹的玛格丽特',warwick:'沃里克伯爵',edward:'爱德华四世',beaufort:'玛格丽特·博福特',richard:'理查三世',elizabeth:'约克的伊丽莎白'};
 
-  function missionInvitation(compact = false) {
-    return `<section class="history-mission-invitation"><span class="eyebrow">AFTER THE CHRONICLE</span><h2>看见历史，再成为其中一人</h2><p>同一场战争，对母亲、国王与流亡者意味着不同的事。选一项使命，读人物的前传，再从他的处境重新出发。</p>${compact ? '' : `<div class="history-mission-list">${window.BOOK_HISTORY.missions.map(mission=>`<button type="button" data-action="mission-role" data-role="${escape(mission.role)}"><span>${escape(roleNames[mission.role] || mission.role)}</span><strong>${escape(mission.title)}</strong><small>${escape(mission.description)}</small><i aria-hidden="true">→</i></button>`).join('')}</div>`}<button type="button" class="primary-button history-roles-button" data-action="roles">选择人物与使命 <span aria-hidden="true">→</span></button></section>`;
+  const abridged = [
+    {heading:'争的起初，是国王身边的位置', paragraphs:[
+      '对法战争失利，国库吃紧，亨利六世又一度无法理政。约克公爵曾代他执政，国王恢复后却失去权力，与宠臣萨默塞特的冲突日益加深。',
+      '1455年，约克一方在圣奥尔本斯获胜，萨默塞特战死，国王被俘但未被废黜。争的起初是朝政；死者家属继承的仇怨，逐渐把权力争执变成内战。'
+    ], people:[{role:'margaret',note:'兰开斯特王后，王储之母'},{role:'warwick',note:'约克公爵的盟友'}]},
+    {heading:'一场雪战，让两位国王分出胜负', paragraphs:[
+      '约克公爵争得继承权后战死，长子爱德华接过主张。玛格丽特不肯让儿子失去王位，继续抵抗；1461年三月，爱德华也被宣布为王。',
+      '陶顿风雪中，约克军大胜，死伤惨重而确数不明。亨利六世与玛格丽特退往苏格兰，爱德华六月加冕。王冠易手，旧王一家却没有放弃归来的希望。'
+    ], people:[{role:'edward',note:'约克新王，承接父亲主张'},{role:'margaret',note:'维护丈夫与儿子的王位'}]},
+    {heading:'拥王者倒下，旧王朝失去父子', paragraphs:[
+      '沃里克与自己扶立的爱德华决裂，转而帮助亨利六世复位。1471年，爱德华从流亡中归来；昔日盟友在巴内特交战，沃里克战死。',
+      '随后，兰开斯特王储死于图克斯伯里，玛格丽特被俘，亨利六世也死在伦敦塔。爱德华恢复统治；王室父子直系断绝，亨利·都铎逃往海外等待机会。'
+    ], people:[{role:'warwick',note:'转盟扶立亨利六世'},{role:'edward',note:'约克国王，自流亡归来'}]},
+    {heading:'父亲留下的王位，没有传到儿子手中', paragraphs:[
+      '爱德华四世去世，幼子继位，叔父理查担任护国公。先王婚姻被指无效、子女继承权遭否定后，理查登基；两位王子在伦敦塔中失去可靠踪迹。',
+      '王子的命运与责任归属至今无定论。约克家内部的裂痕，让亨利·都铎获得机会；他承诺迎娶王子的姐姐伊丽莎白，将两派反对者联合起来。'
+    ], people:[{role:'richard',note:'王子们的叔父，约克新王'},{role:'elizabeth',note:'王子们的姐姐，约克公主'}]},
+    {heading:'王冠易手，胜利还需要一个未来', paragraphs:[
+      '亨利·都铎从威尔士登陆，得到兰开斯特旧部与约克反对者支持。母亲博福特此前的联络与婚约计划，帮助这支联盟形成。',
+      '1485年博斯沃思会战中，威廉·斯坦利的部队支持亨利，理查三世战死。亨利十月加冕，都铎王朝开始；他仍须兑现婚约，把胜利变成能传给孩子的王权。'
+    ], people:[{role:'richard',note:'约克国王，最后的冲锋者'},{role:'beaufort',note:'亨利·都铎之母'}]},
+    {heading:'红与白，在婚礼中合为一朵花', paragraphs:[
+      '亨利七世先加冕，再于1486年迎娶约克公主伊丽莎白。他以在位国王身份成婚，让都铎王权与约克血脉相连；红白合一的都铎玫瑰，成为王朝和解的象征。',
+      '同年长子亚瑟出生，新王朝有了继承人。伊丽莎白翌年才加冕为王后，而反对者仍不肯承认都铎；婚礼把两家连接起来，却没有让刀剑立即收起。'
+    ], people:[{role:'elizabeth',note:'约克公主，亨利七世之妻'},{role:'beaufort',note:'新王之母，伊丽莎白婆母'}]},
+    {heading:'最后一场大会战，不是最后一次挑战', paragraphs:[
+      '少年西姆内尔冒充被囚的约克家沃里克伯爵，在都柏林被拥立。林肯伯爵、部分爱尔兰支持者与海外雇佣军渡海，试图推翻都铎。',
+      '1487年，叛军在斯托克战败，西姆内尔获赦。这通常是玫瑰战争最后一场主要会战；伊丽莎白同年加冕为王后。后来仍有争位者，和平需要不断维持。'
+    ], people:[{role:'elizabeth',note:'约克出身的都铎王后'}]}
+  ];
+  function portrait(role, alt = roleNames[role]) {
+    const src = window.BOOK_ART?.characters?.[role];
+    return src ? `<img src="${escape(src)}" alt="${escape(alt)}" decoding="async">` : '';
+  }
+  function people(index) {
+    return `<div class="history-witnesses" aria-label="此时的人物与关系">${abridged[index].people.map(person=>`<figure class="history-witness">${portrait(person.role)}<figcaption><strong>${escape(roleNames[person.role])}</strong><span>${escape(person.note)}</span></figcaption></figure>`).join('')}</div>`;
+  }
+  function finalMissions() {
+    return `<section class="history-mission-invitation"><h3>现在，换一双眼睛重走历史</h3><div class="history-mission-portraits">${window.BOOK_HISTORY.missions.map(mission=>`<button type="button" data-action="mission-role" data-role="${escape(mission.role)}" aria-label="${escape(roleNames[mission.role])}：${escape(mission.title)}">${portrait(mission.role,'')}<span>${escape(roleNames[mission.role])}</span></button>`).join('')}</div><button type="button" class="text-button history-roles-button" data-action="roles">选择人物与使命 →</button></section>`;
   }
 
-  function overview(atlasPlace) {
+  function overview() {
     const intro = window.BOOK_HISTORY.introduction;
     return `<section class="page left-page history-overview-page" aria-label="玫瑰战争的缘起与七个历史里程碑">
-      ${running('卷首 · 历史里程碑','1455 — 1487')}
-      <section class="history-introduction"><span class="eyebrow">THE WARS OF THE ROSES</span><h1 data-reading-heading tabindex="-1">${escape(intro.title)}</h1><p>${escape(intro.summary)}</p><details class="history-introduction-details"><summary>展开缘起 · 王权、家族与两朵玫瑰</summary>${intro.paragraphs.map(paragraph=>`<p>${escape(paragraph)}</p>`).join('')}</details></section>
-      <div class="history-overview-heading"><h2>七次转折，一段王国往事</h2><p>点选年份，分三页读清前因、经过与余波。</p></div>
-      <ol class="history-milestones">${window.BOOK_HISTORY.milestones.map((item,index)=>`<li><button type="button" class="history-milestone" data-action="chronicle-goto" data-index="${index}"><span class="history-milestone-year">${escape(item.year)}</span><span class="history-milestone-copy"><strong>${escape(item.title)}</strong><span>${escape(item.summary)}</span></span><i aria-hidden="true">→</i></button></li>`).join('')}</ol>
-      <aside class="history-family-invitation"><p>名字太多时，先沿一条血脉认人。</p><button type="button" class="text-button" data-action="genealogy">先看人物关系与家族图谱 <span aria-hidden="true">→</span></button></aside>
+      ${running('卷首 · 血与花之书','1455 — 1487')}
+      <figure class="history-figure history-overview-figure">${window.ArtFrames.render(4,'博斯沃思 · 王冠易手')}</figure>
+      <section class="history-introduction"><h1 data-reading-heading tabindex="-1">${escape(intro.title)}</h1><p class="history-intro-summary">兰开斯特与约克，同出金雀花王室，却为王权兵戎相见。后人以红、白玫瑰记住这场内战；都铎将两花合一，把王朝的胜利讲成和解的故事。</p><details class="history-introduction-details"><summary>两朵玫瑰背后的缘起</summary>${intro.paragraphs.map(paragraph=>`<p>${escape(paragraph)}</p>`).join('')}</details></section>
       <div class="page-number">卷首 · CHRONICLE</div>
-    </section><section class="page right-page history-overview-page history-map-page" aria-label="战争地点与人物使命">
-      ${running('地图 · 人物使命','BRITANNIA')}
-      ${window.HistoryAtlas.render(0,atlasPlace)}
-      ${missionInvitation()}
-      <div class="page-number">地图 · MISSIONS</div>
+    </section><section class="page right-page history-overview-page history-directory-page" aria-label="七个历史里程碑">
+      ${running('七次转折 · 一段往事','CONTENTS')}
+      <div class="history-overview-heading"><h2>王冠如何易手</h2><p>循着图画与年份，翻过三十二年。</p></div>
+      <ol class="history-milestones">${window.BOOK_HISTORY.milestones.map((item,index)=>`<li><button type="button" class="history-milestone" data-action="chronicle-goto" data-index="${index}"><span class="history-timeline-art" aria-hidden="true">${window.ArtFrames.render(index,entries[index].short)}</span><span class="history-milestone-copy"><span class="history-milestone-year">${escape(item.year)}</span><strong>${escape(entries[index].short)}</strong></span><i aria-hidden="true">→</i></button></li>`).join('')}</ol>
+      <nav class="history-directory-links" aria-label="人物与关系"><button type="button" class="text-button" data-action="roles">人物与使命 →</button><button type="button" class="text-button" data-action="genealogy">家族图谱 →</button></nav>
+      <div class="page-number">目录 · Ⅰ—Ⅶ</div>
     </section>`;
   }
 
@@ -107,29 +143,26 @@
     return `<div class="history-part-label">详读 ${page + 1} / ${current.pages.length} · ${page === 0 ? '前因' : page === current.pages.length - 1 ? '余波' : '经过'}</div><h2 class="history-section-title" tabindex="-1">${escape(section.title)}</h2>${section.paragraphs.map(paragraph=>`<p class="history-paragraph">${escape(paragraph)}</p>`).join('')}${page === current.pages.length - 1 ? `<aside class="history-afterword"><span>这一步之后</span><div>${escape(entries[index].consequence)}</div></aside>` : ''}`;
   }
 
-  function pagination(index = 0, page = 0) {
-    index = validIndex(index); page = validPage(index,page);
-    const count = milestone(index).pages.length;
-    return `<nav class="history-pagination story-pagination" aria-label="${entries[index].year} 年历史详读翻页"><button type="button" class="story-page-button" data-action="chronicle-page-previous"${page === 0 ? ' disabled' : ''}>← 前一页</button><span>详读 ${page + 1} / ${count}</span><button type="button" class="story-page-button" data-action="${page === count - 1 ? 'chronicle-map' : 'chronicle-page-next'}">${page === count - 1 ? '地图与人物 →' : '继续读 →'}</button></nav>`;
-  }
+  // Retained for callers of the earlier edition. A milestone now has one spread.
+  function pagination() { return ''; }
 
-  function render(index = 0, page = 0, atlasPlace) {
-    index = validIndex(index); page = validPage(index,page);
-    const current = milestone(index), entry = entries[index];
-    return `<section class="page left-page chronicle-page history-story-page" aria-label="${escape(current.year)} 年详细纪事">
+  function render(index = 0) {
+    index = validIndex(index);
+    const current = milestone(index), entry = entries[index], brief = abridged[index];
+    return `<section class="page left-page chronicle-page history-illustration-page" aria-label="${escape(current.year)} 年历史图画">
       ${running('全景纪事 · '+ current.year,'CHRONICA · '+String(index+1).padStart(2,'0'))}
-      <div class="history-story-opening${page ? ' history-continuation' : ''}"><div class="history-story-heading"><span class="history-year">${escape(current.year)}</span><h1 data-reading-heading tabindex="-1">${escape(current.title)}</h1><p class="history-date">${escape(entry.date)}</p></div><figure class="history-figure">${window.ArtFrames.render(index, current.title)}<figcaption>${escape(entry.caption)}</figcaption></figure></div>
-      <div class="history-reading-copy">${prose(index,page)}</div>
-      ${pagination(index,page)}<div class="page-number">${String(index+1).padStart(2,'0')} · ${escape(current.year)}</div>
-    </section><section class="page right-page chronicle-page history-map-page" aria-label="${escape(current.year)} 年地图、人物与纪年">
-      ${running('地图 · 页边札记',current.year+' · MARGINALIA')}
-      <nav class="history-year-index" aria-label="跳转历史里程碑">${entries.map((item,i)=>`<button type="button" data-action="chronicle-goto" data-index="${i}"${i === index ? ' aria-current="step"' : ''}>${item.year}</button>`).join('')}</nav>
-      ${window.HistoryAtlas.render(index,atlasPlace)}
-      <section class="history-marginalia" aria-label="本节历史查阅"><details class="history-facts"><summary>展开本节纪年 <span>${current.facts.length} 个关键时刻</span></summary><ol>${current.facts.map(fact=>`<li><time>${escape(fact.date)}</time><p>${escape(fact.event)}</p></li>`).join('')}</ol></details><details class="history-actors"><summary>谁在其中，他们想守住什么 <span>${current.actors.length} 位人物</span></summary><ul>${current.actors.map(actor=>`<li><strong>${escape(actor.name)}</strong><span>${escape(actor.side)}</span><p>${escape(actor.aim)}</p></li>`).join('')}</ul></details><aside class="history-source-note"><span>读史时留意</span><p>${escape(current.uncertainty)}</p></aside></section>
-      ${missionInvitation(true)}
-      <button type="button" class="text-button history-family-link" data-action="genealogy">沿家谱认清关系 <span aria-hidden="true">→</span></button>
-      <div class="page-number">${escape(current.year)} · ATLAS</div>
+      <figure class="history-figure history-chapter-figure">${window.ArtFrames.render(index,current.title)}<figcaption>${escape(entry.caption)}</figcaption></figure>
+      <div class="history-story-heading"><span class="history-year">${escape(current.year)}</span><h1 data-reading-heading tabindex="-1">${escape(current.title)}</h1><p class="history-spread-summary">${escape(current.summary)}</p></div>
+      <div class="page-number">${String(index*2+1).padStart(2,'0')} · ${escape(current.year)}</div>
+    </section><section class="page right-page chronicle-page history-story-page" aria-label="${escape(current.year)} 年故事与人物">
+      ${running('王冠之下 · 人的命运',current.year)}
+      ${people(index)}
+      <div class="history-reading-copy"><p class="history-date">${escape(entry.date)}</p><h2 class="history-section-title" data-reading-heading tabindex="-1">${escape(brief.heading)}</h2><div class="history-abridged">${brief.paragraphs.map(paragraph=>`<p class="history-paragraph">${escape(paragraph)}</p>`).join('')}</div></div>
+      <details class="history-full-story"><summary>展开完整纪事与史料旁注</summary>${current.pages.map((section,page)=>`<section class="history-full-section"><span class="history-part-label">${['前因','经过','余波'][page]}</span><h3>${escape(section.title)}</h3>${section.paragraphs.map(paragraph=>`<p>${escape(paragraph)}</p>`).join('')}</section>`).join('')}<aside class="history-source-note"><span>读史时留意</span><p>${escape(current.uncertainty)}</p></aside></details>
+      <button type="button" class="text-button history-map-link" data-action="history-map" data-index="${index}"><span aria-hidden="true">⌖</span> 在地图上查看地点与阵营</button>
+      ${index === entries.length-1 ? finalMissions() : ''}
+      <div class="page-number">${String(index*2+2).padStart(2,'0')} · ${escape(current.year)}</div>
     </section>`;
   }
-  window.Chronicle = { entries, render, overview, prose, pagination };
+  window.Chronicle = { entries, render, overview, prose, pagination, abridged };
 })();

@@ -27,7 +27,11 @@ async function frame(page,label,safeBottom=0){
   assert.ok(result.book.y>=0&&result.book.bottom<=result.height-safeBottom+1,label+': book fits host viewport');
   assert.ok(result.nav.y>=result.book.bottom-1&&result.nav.bottom<=result.height-safeBottom+1,label+': controls fit above bottom safe area');
   assert.ok(result.leaves.every(leaf=>leaf.sw<=leaf.w+2),label+': no leaf overflow');
-  if(result.width<=760) assert.equal(result.leaves.length,1);
+  if(result.width<=760) {
+    assert.equal(result.leaves.length,1);
+    assert.equal(await page.locator('.mobile-reader-nav button:visible').count(),2,label+': one previous/next control pair');
+    assert.equal(await page.locator('.mobile-page-tabs,.mobile-reader-context,[data-mobile-index]').count(),0,label+': no competing mobile navigation');
+  }
   measurements.push({label,...result});
 }
 async function lastLine(page,selector){
@@ -103,16 +107,16 @@ async function runChild(args,url,folder){
     await page.evaluate(()=>{document.documentElement.style.setProperty('--xhs-safe-top','20px');document.documentElement.style.setProperty('--xhs-safe-bottom','34px');});
     await settle(page);
     await frame(page,`${width} container safe-area directory`,34);
-    await click(page,'[data-mobile-index="1"]');await frame(page,`${width} second directory page`,34);
-    await click(page,'[data-mobile-index="0"]');
+    await click(page,'.mobile-reader-nav .mobile-page-next');await frame(page,`${width} second directory page`,34);
+    await click(page,'.mobile-reader-nav .mobile-page-previous');
     await page.screenshot({path:path.join(reports,`directory-safe-${width}.png`)});
   }
   await page.setViewportSize({width:390,height:680});await settle(page);
-  await click(page,'.routes-book [data-action="genealogy"]');await frame(page,'guide in reduced host viewport',34);
+  await click(page,'.toolbar [data-action="genealogy"]');await frame(page,'guide in reduced host viewport',34);
   await click(page,'.genealogy-person[data-person="margaretAnjou"]');
   assert.equal(await page.locator('.mobile-reader-nav').getAttribute('data-mobile-page'),'1');
   await lastLine(page,'.genealogy-detail-note');
-  await click(page,'[data-action="genealogy-return-tree"]');
+  await click(page,'.reading-header [data-action="reader-back"]');
   assert.equal(await page.locator('.mobile-reader-nav').getAttribute('data-mobile-page'),'0');
   await page.screenshot({path:path.join(reports,'genealogy-mobile.png')});
   await page.evaluate(()=>{document.documentElement.style.removeProperty('--xhs-safe-top');document.documentElement.style.removeProperty('--xhs-safe-bottom');});
@@ -125,9 +129,7 @@ async function runChild(args,url,folder){
   await browser.close();browser=null;
   console.log('PASS extracted ZIP: strict CSP, nested relative paths, 13 WebP images, safe areas, landscape and desktop');
   if(!process.argv.includes('--container-only')){
-    await runChild(['tests/history-reader.test.cjs'],url,'history');
-    await runChild(['tests/mobile-reader.test.cjs'],url,'mobile');
-    await runChild(['tests/mobile-reader.test.cjs','--edges-only'],url,'mobile');
+    await runChild(['tests/spread-reader.test.cjs'],url,'spread');
   }
   assert.deepEqual(errors,[]);
   fs.writeFileSync(path.join(reports,'container-report.json'),JSON.stringify({csp,assets,measurements,requests:[...requests],errors,actualXiaohongshuDeviceTest:false},null,2));

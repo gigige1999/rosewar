@@ -45,32 +45,17 @@
   .mobile-reader-screen .book-base{display:none}
   .mobile-reader-screen .mobile-directory-extras{display:block;margin:2px 0 12px;padding-top:9px;border-top:1px solid #997b4a44}
   .mobile-reader-screen .mobile-bookmark{display:flex;align-items:center;justify-content:center;width:100%;min-height:44px;line-height:1.7;font-size:14px;color:var(--red);letter-spacing:.04em}
-  .mobile-reader-nav{display:flex;flex-direction:column;width:min(510px,100%);gap:3px;padding-top:2px;min-height:0;position:relative;z-index:6}
+  .mobile-reader-nav{display:block;width:min(510px,100%);padding-top:2px;min-height:48px;position:relative;z-index:6}
   .mobile-reader-nav[hidden]{display:none}
-  .mobile-reader-context{display:flex;align-items:center;gap:6px;width:100%;min-height:44px;border-bottom:1px solid #997b4a35}
-  .mobile-reader-context button{display:inline-flex;align-items:center;justify-content:center;gap:4px;min-height:44px;min-width:44px;padding:5px 3px;font-size:12px;line-height:1.6;color:var(--red);flex-shrink:0}
-  .mobile-reader-context button:disabled{color:#8b7351;opacity:.38}
-  .mobile-reader-context button:not(:disabled):active{background:#9b78481c}
-  .mobile-reader-context-label{flex:1;min-width:0;color:#896b48;font-size:11px;line-height:1.8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .mobile-reader-context .mobile-reader-back{max-width:110px;text-align:left}
-  .mobile-reader-back>span{font-size:17px;line-height:1}
-  .mobile-chapter-controls{display:flex;align-items:center;gap:7px;flex-shrink:0}
-  .mobile-chapter-controls button+button{position:relative;margin-left:4px}
-  .mobile-chapter-controls button+button::before{content:'';position:absolute;left:-6px;top:14px;bottom:14px;border-left:1px solid #997b4a35}
-  .mobile-page-tabs{display:flex;align-items:stretch;justify-content:center;gap:4px;width:100%;border-bottom:1px solid #997b4a35}
-  .mobile-page-tabs button{display:flex;align-items:center;justify-content:center;gap:6px;flex:1;min-width:0;min-height:44px;padding:4px 2px;font-size:11px;line-height:1.6;letter-spacing:.02em;color:#8b7351;border-bottom:1px solid transparent}
-  .mobile-page-tabs button span{overflow-wrap:anywhere}
-  .mobile-page-tabs button i{width:4px;height:4px;border:1px solid #9e8258;transform:rotate(45deg);flex-shrink:0}
-  .mobile-page-tabs button[aria-pressed="true"]{color:var(--red);border-bottom-color:var(--red)}
-  .mobile-page-tabs button[aria-pressed="true"] i{background:var(--red);border-color:var(--red)}
-  .mobile-page-controls{display:grid;grid-template-columns:minmax(0,1fr)48px minmax(0,1fr);align-items:center;gap:7px;min-height:44px}
-  .mobile-page-controls button{min-height:44px;min-width:0;display:flex;align-items:center;gap:9px;padding:5px 7px;font-size:14px;line-height:1.6;color:var(--red);letter-spacing:.05em}
+  .mobile-page-controls{display:grid;grid-template-columns:minmax(0,1fr)auto minmax(0,1fr);align-items:center;gap:8px;min-height:46px}
+  .mobile-page-controls button{min-height:44px;min-width:0;display:flex;align-items:center;gap:9px;padding:5px 7px;font-size:14px;line-height:1.6;color:var(--red);letter-spacing:.05em;white-space:nowrap}
   .mobile-page-controls .mobile-page-next{justify-content:flex-end;text-align:right}
   .mobile-page-controls button:disabled{opacity:.38;color:#8b7351;cursor:default}
   .mobile-page-controls button:not(:disabled):active{background:#9b78481c}
-  .mobile-page-controls .mobile-page-advance,.mobile-page-controls .mobile-page-retreat{font-size:13px;letter-spacing:.025em}
-  .mobile-page-position{font:15px var(--latin);color:#806545;text-align:center;letter-spacing:.08em}
-  .mobile-page-position i{font-style:normal;color:#b09a76;font-size:12px;margin:0 6px}
+  .mobile-page-position{display:flex;align-items:center;justify-content:center;gap:8px;min-width:44px;font:15px var(--latin);color:#806545;text-align:center;letter-spacing:.05em;white-space:nowrap}
+  .mobile-page-location{font-size:12px;color:#92734e;max-width:66px;overflow:hidden;text-overflow:ellipsis}
+  .mobile-page-count{white-space:nowrap}
+  .mobile-page-position i{font-style:normal;color:#b09a76;font-size:12px;margin:0 5px}
   .mobile-page-ghost{position:absolute!important;inset:0;z-index:1;pointer-events:none;transform-origin:center;backface-visibility:hidden;contain:paint;will-change:transform;opacity:1}
   .mobile-page-ghost .leaf-content{overflow:hidden!important}
   .mobile-turning{overflow:clip}
@@ -136,19 +121,17 @@
   .mobile-reader-screen .story-revelation{margin-top:18px;padding-bottom:8px}
   .mobile-reader-screen .unrevealed-note{display:none}
   .mobile-reader-screen .dialog{max-height:calc(100dvh - 32px)}
-  html.mobile-reader-open #toast{bottom:calc(104px + env(safe-area-inset-bottom));font-size:12px;padding:10px 15px}
+  html.mobile-reader-open #toast{bottom:calc(62px + env(safe-area-inset-bottom));font-size:12px;padding:10px 15px}
 }
 @media(max-width:350px){
   .mobile-reader-screen{padding-left:10px;padding-right:10px;gap:7px}
   .mobile-reader-screen .open-book>.page,.mobile-page-ghost{padding-left:15px;padding-right:15px}
   .mobile-reader-screen .toolbar{gap:6px}
   .mobile-reader-screen .mobile-tools-button{font-size:12px;min-width:43px}
-  .mobile-page-tabs{gap:2px}
-  .mobile-reader-context{gap:4px}
-  .mobile-reader-context button{font-size:11px;padding-left:2px;padding-right:2px}
-  .mobile-chapter-controls{gap:3px}
-  .mobile-page-tabs button{font-size:10px;gap:4px}
+  .mobile-page-controls{gap:5px}
   .mobile-page-controls button{font-size:13px;gap:6px;padding-left:3px;padding-right:3px}
+  .mobile-page-position{gap:5px;font-size:14px}
+  .mobile-page-location{font-size:11px;max-width:50px}
   .mobile-reader-screen .role-portrait-heading{grid-template-columns:99px minmax(0,1fr);gap:12px}
   .mobile-reader-screen .role-portrait-heading .role-arch.portrait-reserve,.mobile-reader-screen .role-portrait-heading .role-arch.portrait-reserve:has(img){width:99px;height:132px;max-width:99px}
   .mobile-reader-screen .role-portrait-heading .role-identity h2{font-size:21px}
@@ -159,7 +142,6 @@
   .mobile-reader-screen .reading-header{height:40px}
   .mobile-reader-screen .open-book>.page,.mobile-page-ghost{padding-top:10px}
   .mobile-reader-screen .page-running{min-height:23px;padding-bottom:6px}
-  .mobile-page-tabs button{min-height:44px}
   .mobile-reader-screen .leaf-footer{min-height:27px}
   .mobile-reader-screen .leaf-scroll-button{min-height:27px}
   .mobile-reader-screen .story-page .chapter-scene .art-reserve{height:135px}

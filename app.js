@@ -97,76 +97,59 @@
     announce('历史里程碑。先读战争缘起，再展开七段历史；也可以接着上次的书签阅读。');
   }
   function header() {
-    return `<header class="reading-header">${button('close-book', `${icon('rose')}<span>血与花之书</span>`, 'brand-button', 'aria-label="合上书本，保存书签"')}
-    <nav class="toolbar" aria-label="书本工具" id="book-tools">${button('routes', '目录', `text-button ${view === 'routes' ? 'current-route' : ''}`)}${button('genealogy', '家谱', `text-button ${view === 'genealogy' ? 'current-route' : ''}`)}${button('chronicle', '历史全景', `text-button ${view === 'chronicle' ? 'current-route' : ''}`)}${button('roles', '人物')}${button('timeline', '年表')}${book.role ? button('decision-journal', '手稿') : ''}<span class="toolbar-divider"></span>${button('font-size', '字', 'icon-button font-toggle', `aria-label="${book.state.fontSize === 'large' ? '恢复标准大字' : '进一步放大字号'}" aria-pressed="${book.state.fontSize === 'large'}"`)}${button('sound', icon(book.state.sound ? 'sound' : 'muted'), 'icon-button', `aria-label="${book.state.sound ? '关闭' : '开启'}声音" aria-pressed="${book.state.sound}"`)}${button('fullscreen', icon('expand'), 'icon-button fullscreen-toggle', 'aria-label="切换全屏"')}${button('about', '书前记', 'text-button mobile-menu-about')}</nav>${button('mobile-tools','更多','mobile-tools-button','aria-expanded="false" aria-controls="book-tools"')}</header>`;
+    return `<header class="reading-header">${view!=='routes'?button('reader-back','←','reader-back-button','aria-label="返回来处"'):''}${button('close-book', `${icon('rose')}<span>血与花之书</span>`, 'brand-button', 'aria-label="合上书本，保存书签"')}
+    <nav class="toolbar" aria-label="书本工具" id="book-tools">${book.state.mode && view==='routes'?button('resume-bookmark','续读','text-button'):''}${button('routes', '目录', `text-button ${view === 'routes' ? 'current-route' : ''}`)}${button('genealogy', '家谱', `text-button ${view === 'genealogy' ? 'current-route' : ''}`)}${button('chronicle', '历史全景', `text-button ${view === 'chronicle' ? 'current-route' : ''}`)}${button('roles', '人物')}${button('timeline', '年表')}${book.role ? button('decision-journal', '手稿') : ''}<span class="toolbar-divider"></span>${button('font-size', '字', 'icon-button font-toggle', `aria-label="${book.state.fontSize === 'large' ? '恢复标准大字' : '进一步放大字号'}" aria-pressed="${book.state.fontSize === 'large'}"`)}${button('sound', icon(book.state.sound ? 'sound' : 'muted'), 'icon-button', `aria-label="${book.state.sound ? '关闭' : '开启'}声音" aria-pressed="${book.state.sound}"`)}${button('fullscreen', icon('expand'), 'icon-button fullscreen-toggle', 'aria-label="切换全屏"')}${button('about', '书前记', 'text-button mobile-menu-about')}</nav>${button('mobile-tools','更多','mobile-tools-button','aria-expanded="false" aria-controls="book-tools"')}</header>`;
   }
   function running(left, right) { return `<div class="page-running"><span>${left}</span><span>${right}</span></div>`; }
-  function mobileConfig() {
-    const config = { view, key: view, steps: [], index: 0, onNavigate: navigateMobile, canNavigate: () => !busy && !dialog.open,
-      backLabel: returnTrail.length ? '返回来处' : '里程碑', onBack: () => act('reader-back') };
-    if (view === 'reading') {
-      const count = book.storyPageCount();
-      config.key = `reading:${book.role.id}:${book.chapter.id}`;
-      config.steps = Array.from({ length: count }, (_, index) => ({ label: index ? '故事续页' : '故事上页', side: 'left' })).concat({ label: '本章互动', side: 'right' });
-      config.index = book.readingSide === 'interaction' ? count : book.storyPage;
-      config.advanceLabel = book.state.chapter === 6 ? '抵达尾声' : '下一章';
-      config.advanceDisabled = !book.isComplete();
-      config.onAdvance = () => act('next');
-      config.retreatLabel = '上一章'; config.retreatDisabled = !book.state.chapter;
-      config.onRetreat = () => act('previous');
-      config.contextLabel = `${book.role.name} · 第 ${book.state.chapter + 1} 章`;
-      config.onChapterPrevious = () => act('previous'); config.chapterPreviousDisabled = !book.state.chapter;
-      config.onChapterNext = () => act('next'); config.chapterNextDisabled = !book.isComplete();
-      config.chapterNextLabel = book.state.chapter === 6 ? '尾声' : '下一章';
-      config.swipeRetreat = config.swipeAdvance = true;
-    } else if (view === 'roles') {
-      const count = window.BOOK_STORIES?.[previewRole]?.introduction?.length || 1;
-      config.key = `roles:${previewRole}`;
-      config.steps = [{ label: '挑选人物', side: 'right' }, ...Array.from({ length: count }, (_, i) => ({ label: `前传${['一','二','三'][i] || i + 1}`, side: 'left' }))];
-      config.index = mobileRolePage;
-      config.advanceLabel = '以此人开始'; config.onAdvance = () => act('choose-role');
-      config.retreatLabel = '卷首目录'; config.onRetreat = () => act('routes');
-      config.contextLabel = '选择人物与使命';
-      if (mobileRolePage) { config.backLabel = '人物列表'; config.onBack = () => navigateMobile(0); }
-    } else if (view === 'chronicle') {
-      const count = book.chroniclePageCount();
-      config.key = `chronicle:${book.state.chronicleIndex}`;
-      config.steps = Array.from({length:count}, (_,i) => ({label:['缘起','经过','余波'][i] || `详读${i+1}`,side:'left'})).concat({label:'地图与人物',side:'right'});
-      config.index = book.state.chronicleSide === 'timeline' ? count : book.chroniclePage;
-      config.advanceLabel = book.state.chronicleIndex === 6 ? '选择人物使命' : '下一里程碑';
-      config.onAdvance = () => act(book.state.chronicleIndex === 6 ? 'roles' : 'chronicle-next');
-      config.retreatLabel = book.state.chronicleIndex ? '上一里程碑' : '战争导读';
-      config.onRetreat = () => act('chronicle-previous');
-      config.contextLabel = `${DATA.chapters[book.state.chronicleIndex].year} · 里程碑 ${book.state.chronicleIndex + 1}/7`;
-      config.onChapterPrevious = () => act('chronicle-previous'); config.chapterPreviousLabel = '上一节';
-      config.onChapterNext = () => act(book.state.chronicleIndex === 6 ? 'roles' : 'chronicle-next'); config.chapterNextLabel = book.state.chronicleIndex === 6 ? '人物' : '下一节';
-      config.swipeRetreat = true; config.swipeAdvance = book.state.chronicleIndex < 6;
-    } else if (view === 'genealogy') {
-      const guided = genealogyMode === 'guide', index = guided ? genealogyGuide : genealogySheet;
-      config.key = `genealogy:${genealogyMode}:${index}`;
-      config.steps = [{ label: guided ? '关系小图' : '完整家谱', side: 'left' }, { label: genealogyPerson ? '人物释读' : '读懂这一图', side: 'right' }];
-      config.index = mobileGenealogyPage;
-      config.advanceLabel = index === 3 ? '返回目录' : guided ? '下一关系图' : '下一分谱';
-      config.onAdvance = () => act(index === 3 ? 'routes' : guided ? 'genealogy-guide-next' : 'genealogy-next');
-      config.retreatLabel = index ? guided ? '上一关系图' : '上一分谱' : '卷首目录';
-      config.onRetreat = () => act(index ? guided ? 'genealogy-guide-previous' : 'genealogy-previous' : 'routes');
-      config.contextLabel = `家族图谱 · ${index + 1}/4`;
-      config.swipeRetreat = index > 0; config.swipeAdvance = index < 3;
-      if (mobileGenealogyPage) { config.backLabel = '关系图'; config.onBack = () => act('genealogy-return-tree'); }
-    } else if (view === 'routes') {
-      config.steps = [{ label: '历史里程碑', side: 'left' }, { label: '地图与人物', side: 'right' }];
-      config.index = mobileRoutePage;
-      config.advanceLabel = '从1455年读起'; config.onAdvance = () => act('chronicle-goto',{dataset:{index:'0'}});
-      config.retreatLabel = '合上此书'; config.onRetreat = () => act('close-book');
-      config.contextLabel = '先读历史，再走进人物'; config.backLabel = '合上书'; config.onBack = () => act('close-book');
-    } else if (view === 'ending') {
-      config.key = `ending:${book.role.id}`;
-      config.steps = [{ label: '战争尾声', side: 'left' }, { label: '人物终章', side: 'right' }];
-      config.index = mobileEndingPage;
-      config.advanceLabel = '换位人物'; config.onAdvance = () => act('roles');
-      config.retreatLabel = '上一章'; config.onRetreat = () => act('previous');
-      config.contextLabel = '人物尾声'; config.onChapterPrevious = () => act('previous'); config.swipeRetreat = true;
+  function spreadNavigation() {
+    if (view === 'routes') return { previous:'close-book', next:'history-start', label:'卷首 · 两朵玫瑰' };
+    if (view === 'chronicle') return { previous:book.state.chronicleIndex ? 'chronicle-previous' : 'routes', next:book.state.chronicleIndex === 6 ? 'roles' : 'chronicle-next', label:`${DATA.chapters[book.state.chronicleIndex].year} · ${book.state.chronicleIndex + 1} / 7` };
+    if (view === 'reading') return { previous:book.state.chapter ? 'previous' : 'roles', next:'next', disabled:!book.isComplete(), label:`${book.chapter.year} · ${book.state.chapter + 1} / 7`, reason:'完成这一页的互动后，继续翻阅' };
+    if (view === 'roles') return { previous:'reader-back', next:'choose-role', label:'人物 · ' + (DATA.roles.find(role=>role.id===previewRole)?.name || '') };
+    if (view === 'ending') return { previous:'previous', next:'roles', label:'尾声' };
+    const guided = genealogyMode === 'guide', index = guided ? genealogyGuide : genealogySheet;
+    return { previous:index ? guided ? 'genealogy-guide-previous' : 'genealogy-previous' : 'reader-back', next:index < 3 ? guided ? 'genealogy-guide-next' : 'genealogy-next' : 'reader-back', label:`家谱 · ${index + 1} / 4` };
+  }
+  function moveSpread(direction) {
+    if (busy || dialog.open) return;
+    const navigation = spreadNavigation(), action = direction < 0 ? navigation.previous : navigation.next;
+    if (direction > 0 && navigation.disabled) return;
+    act(action);
+    if (direction < 0 && innerWidth <= 760 && !['reader-back','close-book'].includes(action)) {
+      setLeafSide(1); syncMobile(); save();
     }
+  }
+  function setLeafSide(index) {
+    if (view === 'reading') book.setReadingSide(index ? 'interaction' : 'story');
+    else if (view === 'chronicle') book.setChronicleSide(index ? 'timeline' : 'illustration');
+    else if (view === 'roles') mobileRolePage = index;
+    else if (view === 'genealogy') mobileGenealogyPage = index;
+    else if (view === 'routes') mobileRoutePage = index;
+    else if (view === 'ending') mobileEndingPage = index;
+  }
+  function mobileConfig() {
+    const nav = spreadNavigation();
+    const config = { view, key:view, steps:[{label:'左页',side:'left'},{label:'右页',side:'right'}], index:0,
+      onNavigate:navigateMobile, canNavigate:()=>!busy && !dialog.open,
+      onAdvance:()=>moveSpread(1), onRetreat:()=>moveSpread(-1),
+      advanceLabel:'后一页', retreatLabel:'前一页', advanceDisabled:nav.disabled,
+      advanceDisabledReason:nav.reason, positionLabel:nav.label,
+      swipeRetreat:true, swipeAdvance:!['roles','ending'].includes(view) };
+    if (view === 'reading') { config.key=`reading:${book.role.id}:${book.chapter.id}`; config.index=book.readingSide === 'interaction' ? 1 : 0; }
+    else if (view === 'chronicle') { config.key=`chronicle:${book.state.chronicleIndex}`; config.index=book.state.chronicleSide === 'timeline' ? 1 : 0; }
+    else if (view === 'roles') { config.key=`roles:${previewRole}`; config.index=mobileRolePage; }
+    else if (view === 'genealogy') { config.key=`genealogy:${genealogyMode}:${genealogyMode==='guide'?genealogyGuide:genealogySheet}`; config.index=mobileGenealogyPage; }
+    else if (view === 'routes') config.index=mobileRoutePage;
+    else if (view === 'ending') { config.key=`ending:${book.role.id}`; config.index=mobileEndingPage; }
+    if (['reading','chronicle'].includes(view)) {
+      const chapterIndex=view==='reading'?book.state.chapter:book.state.chronicleIndex;
+      config.positionLabel=DATA.chapters[chapterIndex].year;
+      config.pageOffset=chapterIndex*2; config.pageTotal=14;
+    } else if(view==='genealogy') {
+      config.positionLabel='家族图谱'; config.pageOffset=(genealogyMode==='guide'?genealogyGuide:genealogySheet)*2; config.pageTotal=8;
+    }
+    // Choosing a witness remains an explicit tap, after the last history leaf.
+    if (view === 'chronicle' && book.state.chronicleIndex === 6) config.swipeAdvance=false;
     return config;
   }
   function syncMobile() {
@@ -174,28 +157,12 @@
     requestAnimationFrame(syncLeafControls);
   }
   function navigateMobile(index) {
-    const config = mobileConfig();
-    if (busy || dialog.open || !Number.isInteger(index) || !config.steps[index]) return;
+    if (busy || dialog.open || ![0,1].includes(index)) return;
     document.querySelector('.reading-header')?.classList.remove('mobile-tools-open');
-    document.querySelector('[data-action="mobile-tools"]')?.setAttribute('aria-expanded', 'false');
+    document.querySelector('[data-action="mobile-tools"]')?.setAttribute('aria-expanded','false');
     window.MobileReader?.remember();
-    if (view === 'reading') {
-      book.setReadingSide(index === book.storyPageCount() ? 'interaction' : 'story');
-      if (index < book.storyPageCount() && index !== book.storyPage) { turnStory(index - book.storyPage); return; }
-      save();
-    } else if (view === 'roles') {
-      mobileRolePage = index;
-      if (index && index - 1 !== biographyPage) { turnBiography(index - 1 - biographyPage); return; }
-    } else if (view === 'chronicle') {
-      book.setChronicleSide(index === book.chroniclePageCount() ? 'timeline' : 'illustration');
-      if (index < book.chroniclePageCount() && index !== book.chroniclePage) { turnChroniclePage(index - book.chroniclePage); return; }
-      save();
-    }
-    else if (view === 'genealogy') mobileGenealogyPage = index;
-    else if (view === 'routes') mobileRoutePage = index;
-    else if (view === 'ending') mobileEndingPage = index;
-    syncMobile(); pageSound();
-    announce(`${config.steps[index].label}，第 ${index + 1} 页，共 ${config.steps.length} 页。`);
+    setLeafSide(index); save(); syncMobile(); pageSound();
+    announce(`${index ? '右' : '左'}页，${spreadNavigation().label}。`);
   }
   function mobileDirectoryBookmark() {
     return book.state.mode ? `<div class="mobile-directory-extras">${button('mobile-resume', `接着上次的书签读${icon('arrowRight')}`, 'text-button mobile-bookmark')}</div>` : '';
@@ -209,13 +176,12 @@
       <div class="role-frontispiece"><div class="role-portrait-heading"><div class="role-arch portrait-reserve" aria-label="${escape(role.name)}的肖像"><span>PORTRAIT</span>${media('characters', role.id, role.name + '的手抄本肖像')}</div>
         <div class="role-identity"><span class="eyebrow">${escape(role.en)}</span><h2>${escape(role.name)}</h2><span class="role-years">${escape(role.years)}</span><span class="role-epithet">${escape(role.epithet)}</span></div></div>
         <div class="role-biography">${biographyCopy(role)}</div>
-      </div>${biographyNavigation(role)}<div class="page-number">✦</div>
+      </div><div class="page-number">✦</div>
     </section>
     <section class="page right-page role-page">${running('CHOOSE YOUR WITNESS', '六人 · 六种目光')}
-      <h1 class="selection-heading">换一双眼睛，重走历史</h1><p class="selection-intro">你已看见王冠如何易手。现在选一位人物，从他的家人、恐惧与愿望出发，决定每一步愿意付出什么。</p>
-      <div class="role-grid" role="group" aria-label="选择叙述人物">${DATA.roles.map(item => `<button class="role-card" data-action="preview-role" data-role="${item.id}" aria-pressed="${item.id === role.id}">${icon(item.symbol)}<strong>${escape(item.name)}</strong><small>${escape(item.faction)}</small></button>`).join('')}</div>
+      <h1 class="selection-heading">换一双眼睛，重走历史</h1><p class="selection-intro">选一个人，从他的牵挂出发。向后翻页，开始这一生。</p>
+      <div class="role-grid" role="group" aria-label="选择叙述人物">${DATA.roles.map(item => `<button class="role-card" data-action="preview-role" data-role="${item.id}" aria-pressed="${item.id === role.id}">${media('characters',item.id,item.name+'的肖像')}<strong>${escape(item.name)}</strong><small>${escape(item.faction)}</small></button>`).join('')}</div>
       ${roleMission(role.id)}
-      ${button('choose-role', `借此人的目光，翻开历史${icon('arrowRight')}`, 'primary-button choose-role')}
       <p class="fiction-note">没有标准答案，只有你愿意承担的代价。<br>真实历史与架空后果分别标注，决定自动记入手稿。</p>
       <div class="page-number">i</div>
     </section>`;
@@ -227,9 +193,9 @@
   function chapterPages() {
     const chapter = book.chapter, index = book.state.chapter, role = book.role;
     return `<section class="page left-page chapter-page story-page" aria-label="故事与人物视角">${running('THE WARS OF THE ROSES', `CHAPTER ${roman[index]}`)}
-      <div class="story-opening${book.storyPage ? ' story-opening-continuation' : ''}"><div class="chapter-page-heading"><span class="chapter-year">${escape(chapter.year)}</span><h2 tabindex="-1" data-reading-heading>${escape(chapter.title)}</h2><p class="chapter-date">${escape(chapter.date)}</p><p class="chapter-subtitle">${escape(chapter.subtitle)}</p></div>
+      <div class="story-opening"><div class="chapter-page-heading"><span class="chapter-year">${escape(chapter.year)}</span><h2 tabindex="-1" data-reading-heading>${escape(chapter.title)}</h2><p class="chapter-date">${escape(chapter.date)}</p></div>
       <figure class="chapter-scene">${window.ArtFrames.render(index, chapter.title)}</figure></div>
-      <div class="story-copy">${storyCopy()}</div>${storyNavigation()}
+      <div class="story-copy">${storyCopy()}</div>
       <div class="page-number">${String(index * 2 + 1).padStart(2, '0')}</div>
     </section>
     <section class="page right-page chapter-page interaction-page" aria-label="本章互动">${running(`${escape(role.name)} · 之页`, `第 ${roman[index]} 章`)}
@@ -239,65 +205,11 @@
   }
   function biographyCopy(role) {
     const pages = window.BOOK_STORIES?.[role.id]?.introduction || [role.description];
-    biographyPage = Math.min(biographyPage, pages.length - 1);
-    return `<span class="biography-label">人物前传 · 第 ${biographyPage + 1} 页</span><p class="biography-prose">${escape(pages[biographyPage])}</p>`;
-  }
-  function biographyNavigation(role) {
-    const count = window.BOOK_STORIES?.[role.id]?.introduction?.length || 1;
-    return `<nav class="story-pagination biography-pagination" aria-label="人物前传翻页">${button('biography-previous', '← 前一页', 'story-page-button', biographyPage === 0 ? 'disabled' : '')}<span>前传 ${biographyPage + 1} / ${count}</span>${button('biography-next', '后一页 →', 'story-page-button', biographyPage === count - 1 ? 'disabled' : '')}</nav>`;
+    return `<p class="biography-summary">${escape(role.description)}</p><details class="reader-detail biography-detail"><summary>读他的完整前传</summary>${pages.map(text=>`<p class="biography-prose">${escape(text)}</p>`).join('')}</details>`;
   }
   function storyCopy() {
-    const pages = window.BOOK_STORIES?.[book.role.id]?.chapters?.[book.state.chapter]?.pages;
-    const page = pages?.[book.storyPage] || { title: '这一年的故事', paragraphs: [book.chapter.summary, book.chapter.voices[book.role.id].text] };
-    return `<div class="story-heading">${icon('feather')}人物纪事 · ${book.storyPage + 1} / ${book.storyPageCount()}</div><h3 class="story-section-title" tabindex="-1">${escape(page.title)}</h3>${page.paragraphs.map(text => `<p class="story-paragraph">${escape(text)}</p>`).join('')}${book.storyPage === book.storyPageCount() - 1 ? `<div class="story-context-note">史事为叙述基础；人物内心与场景化描写为文学推演。</div><div class="decision-thread">${decisionThread()}</div>` : ''}`;
-  }
-  function storyNavigation() {
-    return `<nav class="story-pagination" aria-label="本章故事翻页">${button('story-previous', '← 故事前页', 'story-page-button', book.storyPage === 0 ? 'disabled' : '')}<span>故事 ${book.storyPage + 1} / ${book.storyPageCount()}</span>${button('story-next', '故事续页 →', 'story-page-button', book.storyPage === book.storyPageCount() - 1 ? 'disabled' : '')}</nav>`;
-  }
-  function turnStory(direction) {
-    if (view !== 'reading' || !book.setStoryPage(book.storyPage + direction)) return;
-    window.MobileReader?.remember();
-    book.setReadingSide('story');
-    const copy = document.querySelector('.story-copy'), body = copy?.closest('.leaf-content');
-    if (!copy || !body) return;
-    copy.innerHTML = storyCopy();
-    document.querySelector('.story-opening').classList.toggle('story-opening-continuation', book.storyPage > 0);
-    document.querySelector('.story-page .story-pagination').outerHTML = storyNavigation();
-    body.scrollTop = 0;
-    if (innerWidth > 760) {
-      copy.querySelector('.story-section-title').focus({ preventScroll: true });
-      copy.animate?.([{ opacity: .3, transform: `translateX(${direction * 12}px)` }, { opacity: 1, transform: 'translateX(0)' }], { duration: reducedMotion ? 0 : 260 });
-    }
-    save(); syncMobile(); syncLeafControls(); pageSound();
-    announce(`本章故事第 ${book.storyPage + 1} 页，共 ${book.storyPageCount()} 页。${copy.querySelector('.story-section-title').textContent}`);
-  }
-  function turnBiography(direction) {
-    if (view !== 'roles') return;
-    const role = DATA.roles.find(item => item.id === previewRole), count = window.BOOK_STORIES?.[role.id]?.introduction?.length || 1;
-    if (biographyPage + direction < 0 || biographyPage + direction >= count) return;
-    window.MobileReader?.remember();
-    biographyPage += direction;
-    mobileRolePage = biographyPage + 1;
-    document.querySelector('.role-biography').innerHTML = biographyCopy(role);
-    document.querySelector('.biography-pagination').outerHTML = biographyNavigation(role);
-    const body = document.querySelector('.left-page .leaf-content'); body.scrollTop = 0;
-    document.querySelector('.role-biography').setAttribute('tabindex', '-1');
-    if (innerWidth > 760) document.querySelector('.role-biography').focus({ preventScroll: true });
-    syncMobile(); syncLeafControls(); pageSound(); announce(`人物前传第 ${biographyPage + 1} 页，共 ${count} 页。`);
-  }
-  function turnChroniclePage(direction) {
-    if (view !== 'chronicle') return;
-    if (!book.setChroniclePage(book.chroniclePage + direction)) return;
-    window.MobileReader?.remember();
-    book.setChronicleSide('illustration');
-    const copy = document.querySelector('.history-reading-copy');
-    copy.innerHTML = window.Chronicle.prose(book.state.chronicleIndex, book.chroniclePage);
-    document.querySelector('.history-story-opening').classList.toggle('history-continuation',book.chroniclePage > 0);
-    document.querySelector('.history-pagination').outerHTML = window.Chronicle.pagination(book.state.chronicleIndex,book.chroniclePage);
-    copy.closest('.leaf-content').scrollTop = 0;
-    save(); syncMobile(); syncLeafControls(); pageSound();
-    if (innerWidth > 760) copy.querySelector('.history-section-title')?.focus({preventScroll:true});
-    announce(`历史详读第 ${book.chroniclePage + 1} 页，共 ${book.chroniclePageCount()} 页。`);
+    const pages = window.BOOK_STORIES?.[book.role.id]?.chapters?.[book.state.chapter]?.pages || [];
+    return `<p class="story-brief">${escape(pages[0]?.paragraphs[0] || book.chapter.summary)}</p><details class="reader-detail story-detail"><summary>走进${escape(book.role.name)}的这一年</summary>${pages.map(page=>`<section><h3 class="story-section-title">${escape(page.title)}</h3>${page.paragraphs.map(text=>`<p class="story-paragraph">${escape(text)}</p>`).join('')}</section>`).join('')}<p class="story-context-note">史事为叙述基础；人物内心与场景化描写为文学推演。</p>${decisionThread()}</details>`;
   }
   function rememberReturn() {
     if (['cover','intro'].includes(view)) return;
@@ -307,6 +219,7 @@
       mode:book.state.mode,role:book.state.role,chapter:book.state.chapter,ending:book.state.ending,
       chronicleIndex:book.state.chronicleIndex,chronicleSide:book.state.chronicleSide,
       storyPage:book.storyPage,readingSide:book.readingSide,chroniclePage:book.chroniclePage,
+      details:[...document.querySelectorAll('.open-book>.page details')].map(node=>node.open),
       scroll:[...document.querySelectorAll('.open-book>.page .leaf-content')].map(n=>n.scrollTop)});
     if (returnTrail.length > 12) returnTrail.shift();
   }
@@ -325,6 +238,7 @@
       }
     },true);
     requestAnimationFrame(()=>{
+      document.querySelectorAll('.open-book>.page details').forEach((node,i)=>{node.open=previous.details[i] || false;});
       document.querySelectorAll('.open-book>.page .leaf-content').forEach((n,i)=>{n.scrollTop=previous.scroll[i]||0;});
       syncLeafControls();
     });
@@ -339,7 +253,7 @@
     syncLeafControls();
     const heading=selectedDetail.querySelector('h3,h4');
     heading?.setAttribute('tabindex','-1'); heading?.focus({preventScroll:true});
-    const body=selectedDetail.closest('.leaf-content');
+    const body=selectedDetail.closest('.leaf-content') || selectedDetail.closest('dialog');
     if(body) body.scrollTo({top:body.scrollTop+selectedDetail.getBoundingClientRect().top-body.getBoundingClientRect().top-8,behavior:reducedMotion?'instant':'smooth'});
   }
   function changeGenealogy(index, person) {
@@ -400,7 +314,7 @@
     return `<section class="game-panel${solved ? ' game-complete' : ''}${isChoice ? ' choice-panel' : ''}" aria-labelledby="game-title"><div class="game-panel-heading"><span>${isChoice ? '命运的抉择' : '纸上的片刻'}</span><span>${solved ? isChoice ? '✦ 已落笔' : '✦ 已完成' : isChoice ? '每条路，都有代价' : '不计时 · 慢慢来'}</span></div><h3 id="game-title">${escape(meta.title)}</h3>${isChoice && meta.sceneDate ? `<p class="decision-scene-date">${escape(meta.sceneDate)} · 心境为文学想象</p>` : ''}<p class="game-stakes">${escape(meta.stakes || meta.description)}</p><p class="game-instruction">${escape(meta.instruction)}</p><div class="game-board" data-activity-kind="${escape(meta.kind)}">${window.RoleGames.render(roleId, book.state.chapter, book.game, { solved })}</div><div class="game-foot"><span class="game-message" role="status">${isChoice ? '' : escape(message || (solved ? '这一页已经留下你的痕迹。' : ''))}</span>${!solved ? button('game-hint', gameHint ? '收起' : isChoice ? '听见心里的另一声' : '一点提示', 'hint-button', `aria-expanded="${gameHint}"`) : icon('seal')}</div>${gameHint && !solved ? `<p class="game-hint">${escape(meta.hint)}</p>` : ''}${solved ? button('game-revisit-prompt', isChoice ? '重走此刻，重新落笔' : '重走此刻，再玩一次', 'game-reset') : !isChoice ? button('game-reset', '重新摆放', 'game-reset') : ''}</section>`;
   }
   function revelation() {
-    return book.isComplete() ? `<div class="revealed-fact"><span class="revelation-label">${icon('seal')}历史底本 · 史官续记</span><p>${escape(book.chapter.fact)}</p></div>${button('next', `${book.state.chapter === 6 ? '抵达尾声' : '翻往下一章'}${icon('arrowRight')}`, 'primary-button chapter-continue')}` : `<p class="unrevealed-note">${icon('feather')}${window.RoleGames.meta(book.role.id, book.state.chapter).kind === 'choice' ? '落笔之后，读一读你的后果与真实历史。' : '让手上的片刻，为这一页留下记忆。'}</p>`;
+    return book.isComplete() ? `<div class="revealed-fact"><span class="revelation-label">${icon('seal')}历史底本 · 史官续记</span><p>${escape(book.chapter.fact)}</p></div>` : `<p class="unrevealed-note">${icon('feather')}${window.RoleGames.meta(book.role.id, book.state.chapter).kind === 'choice' ? '落笔之后，读一读你的后果与真实历史。' : '让手上的片刻，为这一页留下记忆。'}</p>`;
   }
   function decisionThread() {
     const previous = book.decisions().filter(entry => entry.index < book.state.chapter).at(-1);
@@ -470,15 +384,8 @@
       <div class="ending-actions">${button('roles', `换一双眼睛${icon('arrowRight')}`, 'primary-button')}${button('timeline', '重读大事记')}${button('about', '史料与书前记')}</div><div class="finis">Finis. &nbsp; ✧</div><div class="page-number">16</div></section>`;
   }
   function base() {
-    if (view === 'genealogy') return `<div class="book-base genealogy-base"><span class="micro">一棵家族树，长出几顶王冠。</span>${button('reader-back', `${icon('arrowLeft')}${returnTrail.length ? '返回来处' : '历史里程碑'}`)}${book.state.mode ? button('resume-bookmark', `接着书签读${icon('arrowRight')}`) : button('roles', `认识六位主角${icon('arrowRight')}`)}</div>`;
-    if (view === 'routes') {
-      const bookmark = book.state.mode === 'chronicle' ? `历史全景 · ${DATA.chapters[book.state.chronicleIndex].year}` : book.role ? `${escape(book.role.name)} · ${book.state.ending ? '尾声' : `${book.chapter.year} · 故事 ${book.storyPage + 1}/${book.storyPageCount()}`}` : '';
-      return `<div class="book-base route-base"><span class="micro">历史里程碑 · 先读历史，再走进人物</span>${book.state.mode ? button('resume-bookmark', `接着书签读 · ${bookmark}${icon('arrowRight')}`, 'text-button resume-bookmark') : ''}${button('about', '书前记与史料')}</div>`;
-    }
-    if (view === 'chronicle') return `<div class="book-base chronicle-base"><span class="micro role-badge">${icon('feather')}历史全景 · ${DATA.chapters[book.state.chronicleIndex].year}</span>${button('reader-back', `${icon('arrowLeft')}${returnTrail.length ? '返回来处' : '历史里程碑'}`, 'text-button')}<nav class="book-navigation" aria-label="时间轴翻页">${button('chronicle-previous', `${icon('arrowLeft')}${book.state.chronicleIndex ? '上一里程碑' : '战争导读'}`, 'text-button')}${button(book.state.chronicleIndex === 6 ? 'roles' : 'chronicle-next', `${book.state.chronicleIndex === 6 ? '选择人物使命' : '下一里程碑'}${icon('arrowRight')}`, 'text-button next-page')}</nav></div>`;
-    if (view === 'roles') return `<div class="book-base"><span class="micro">每个人，都只握着真相的一页。</span>${button('reader-back', `${icon('arrowLeft')}${returnTrail.length ? '返回来处' : '历史里程碑'}`, 'text-button')}${book.state.mode ? button('return-reading', `回到书签${icon('arrowRight')}`) : '<span class="eyebrow">Six lives. One crown.</span>'}</div>`;
-    const ending = view === 'ending';
-    return `<div class="book-base"><span class="micro role-badge">${icon(book.role.symbol)}${escape(book.role.name)} · 视角</span><div class="chapter-dots" aria-label="章节书签">${DATA.chapters.map((chapter, i) => `<button class="chapter-dot${book.isComplete(i) ? ' done' : ''}${!ending && book.state.chapter === i ? ' active' : ''}" data-action="goto" data-index="${i}" aria-label="${chapter.year}：${escape(chapter.title)}" ${!ending && book.state.chapter === i ? 'aria-current="step"' : ''} ${book.isUnlocked(i) ? '' : 'disabled'}><i></i></button>`).join('')}</div><nav class="book-navigation" aria-label="章节翻页">${button('previous', `${icon('arrowLeft')}上一章`, 'text-button', book.state.chapter === 0 && !ending ? 'disabled' : '')}${button(ending ? 'close-book' : 'next', `${ending ? '合上此书' : book.state.chapter === DATA.chapters.length - 1 ? '抵达尾声' : '下一章'}${icon('arrowRight')}`, 'text-button next-page', !ending && !book.isComplete() ? 'disabled' : '')}</nav></div>`;
+    const nav=spreadNavigation();
+    return `<nav class="book-base spread-navigation" aria-label="整组书页翻阅">${button('reader-previous', '← 前一页', 'reader-turn')}<span class="reader-position">${escape(nav.label)}${nav.disabled ? '<small>完成右页互动后继续</small>' : view==='roles' ? '<small>向后翻页，以此人开始</small>' : ''}</span>${button('reader-next','后一页 →','reader-turn',nav.disabled ? `disabled title="${escape(nav.reason)}"` : '')}</nav>`;
   }
   function render() {
     window.MobileReader?.release();
@@ -487,31 +394,25 @@
     document.documentElement.dataset.textSize = book.state.fontSize;
     if (view === 'cover') { cover(); return; }
     const pageName = view === 'genealogy' ? '卷首家族图谱' : view === 'chronicle' ? '上帝视角：图文时间轴' : view === 'routes' ? '历史里程碑与战争导读' : view === 'roles' ? '卷首人物选择' : view === 'ending' ? '尾声' : `第${roman[book.state.chapter]}章：${escape(book.chapter.title)}`;
-    app.innerHTML = `<main class="reading-screen">${header()}<article class="open-book ${view}-book" aria-label="${pageName}">${view === 'genealogy' ? genealogyMode === 'guide' ? window.Genealogy.renderGuide(genealogyGuide, genealogyPerson) : window.Genealogy.render(genealogySheet, genealogyPerson, genealogyExpansion()) : view === 'chronicle' ? window.Chronicle.render(book.state.chronicleIndex, book.chroniclePage, atlasPlace) : view === 'routes' ? routePages() : view === 'roles' ? rolePages() : view === 'ending' ? endingPages() : chapterPages()}</article>${base()}</main>`;
+    app.innerHTML = `<main class="reading-screen">${header()}<article class="open-book ${view}-book" aria-label="${pageName}">${view === 'genealogy' ? genealogyMode === 'guide' ? window.Genealogy.renderGuide(genealogyGuide, genealogyPerson) : window.Genealogy.render(genealogySheet, genealogyPerson, genealogyExpansion()) : view === 'chronicle' ? window.Chronicle.render(book.state.chronicleIndex) : view === 'routes' ? routePages() : view === 'roles' ? rolePages() : view === 'ending' ? endingPages() : chapterPages()}</article>${base()}</main>`;
     mountLeaves();
     window.MobileReader?.mount(mobileConfig());
     if (view === 'reading') mountGame();
   }
   function syncLeafControls() {
     document.querySelectorAll('.open-book > .page').forEach(page => {
-      const body = page.querySelector('.leaf-content'), controls = page.querySelector('.leaf-scroll-controls');
-      if (!body || !controls) return;
-      const hasMore = body.scrollHeight - body.clientHeight > 3 && getComputedStyle(body).overflowY === 'auto';
-      const atEnd = body.scrollTop + body.clientHeight >= body.scrollHeight - 4;
-      controls.hidden = !hasMore;
-      page.classList.toggle('leaf-has-more', hasMore && !atEnd);
-      const next = controls.querySelector('[data-action="leaf-down"]');
-      const previous = controls.querySelector('[data-action="leaf-up"]');
-      next.disabled = atEnd;
-      next.textContent = atEnd ? '本页已读至末尾' : '继续阅读 ↓';
-      previous.hidden = body.scrollTop < 4;
+      const body=page.querySelector('.leaf-content'), hint=page.querySelector('.leaf-scroll-hint');
+      if(!body || !hint) return;
+      const more=body.scrollHeight-body.clientHeight>3 && body.scrollTop+body.clientHeight<body.scrollHeight-4;
+      hint.hidden=!more; page.classList.toggle('leaf-has-more',more);
     });
   }
   function mountLeaves() {
     const disposers = [], observer = new ResizeObserver(syncLeafControls);
     leafObserver = observer;
     document.querySelectorAll('.open-book > .page').forEach((page, index) => {
-      if (view === 'routes') page.insertAdjacentHTML('afterbegin', mobileDirectoryBookmark());
+      page.querySelectorAll('.story-pagination,.genealogy-return-tree').forEach(node=>node.remove());
+      if (view === 'routes' && index===1) page.insertAdjacentHTML('beforeend', mobileDirectoryBookmark());
       const running = page.querySelector('.page-running'), number = page.querySelector('.page-number');
       const body = document.createElement('div');
       body.className = 'leaf-content'; body.id = `leaf-content-${index}`;
@@ -519,12 +420,8 @@
       body.setAttribute('aria-label', page.getAttribute('aria-label') || (index ? '右页内容' : '左页内容'));
       Array.from(page.children).filter(node => node !== running && node !== number).forEach(node => body.append(node));
       const footer = document.createElement('div'); footer.className = 'leaf-footer';
-      const storyPager = body.querySelector('.story-pagination');
-      if (storyPager) { footer.append(storyPager); footer.classList.add('leaf-footer-paged'); }
-      const chooseRole = body.querySelector('.choose-role');
-      if (chooseRole) { footer.append(chooseRole); footer.classList.add('leaf-footer-action'); }
       if (number) footer.append(number);
-      footer.insertAdjacentHTML('beforeend', `<nav class="leaf-scroll-controls" aria-label="本页阅读" hidden>${button('leaf-up', '↑ 回到页首', 'leaf-scroll-button', `aria-controls="${body.id}"`)}${button('leaf-down', '继续阅读 ↓', 'leaf-scroll-button', `aria-controls="${body.id}"`)}</nav>`);
+      footer.insertAdjacentHTML('beforeend','<span class="leaf-scroll-hint" hidden>向下阅读 ↓</span>');
       page.append(body, footer);
       body.addEventListener('scroll', syncLeafControls, { passive: true });
       disposers.push(() => body.removeEventListener('scroll', syncLeafControls));
@@ -642,7 +539,11 @@
       case 'open-chronicle': if (view === 'cover') openBook(); else act('chronicle'); break;
       case 'skip-intro': finishIntro(); break;
       case 'close-book': save(); stopSound(); cover(); window.scrollTo(0, 0); break;
-      case 'reader-back': returnToPreviousView(); break;
+      case 'reader-previous': if(innerWidth<=760) window.MobileReader?.move(-1); else moveSpread(-1); break;
+      case 'reader-next': if(innerWidth<=760) window.MobileReader?.move(1); else moveSpread(1); break;
+      case 'history-start': act('chronicle-goto',{dataset:{index:'0'}}); break;
+      case 'reader-back': if(view==='genealogy' && mobileGenealogyPage && innerWidth<=760) act('genealogy-return-tree'); else returnToPreviousView(); break;
+      case 'history-map': openDialog('战争的足迹','BRITANNIA · '+(view==='chronicle'?DATA.chapters[book.state.chronicleIndex].year:'1455—1487'),window.HistoryAtlas.render(view==='chronicle'?book.state.chronicleIndex:0,atlasPlace)); dialog.classList.add('atlas-dialog'); break;
       case 'routes': if (dialog.open) dialog.close(); returnTrail.length=0; turn(() => { mobileRoutePage = 0; view = 'routes'; atlasPlace=null; }, true,true); break;
       case 'atlas-place': selectAtlasPlace(target.dataset.place); break;
       case 'atlas-return': { const map=document.querySelector('.history-atlas-map,.atlas-map'); map?.setAttribute('tabindex','-1'); map?.focus({preventScroll:true}); map?.scrollIntoView({block:'start',behavior:reducedMotion?'instant':'smooth'}); break; }
@@ -692,19 +593,13 @@
       case 'genealogy-role':
         if (DATA.roles.some(role => role.id === target.dataset.role)) {
           restartRolePath = book.state.mode !== 'character';
-          previewRole = target.dataset.role; biographyPage = 0; mobileRolePage = 1;
+          previewRole = target.dataset.role; biographyPage = 0; mobileRolePage = 0;
           turn(() => { view = 'roles'; });
         }
         break;
       case 'mobile-resume':
       case 'resume-bookmark': if (book.state.mode) turn(() => { view = book.state.mode === 'chronicle' ? 'chronicle' : book.state.ending ? 'ending' : 'reading'; }); break;
-      case 'story-next': turnStory(1); break;
-      case 'story-previous': turnStory(-1); break;
-      case 'biography-next': turnBiography(1); break;
-      case 'biography-previous': turnBiography(-1); break;
-      case 'chronicle-page-next': turnChroniclePage(1); break;
-      case 'chronicle-page-previous': turnChroniclePage(-1); break;
-      case 'chronicle-map': if (view === 'chronicle') { navigateMobile(book.chroniclePageCount()); if(innerWidth>760)document.querySelector('.history-map-page .leaf-content')?.focus(); } break;
+
       case 'chronicle': if (dialog.open) dialog.close(); turn(() => { book.openChronicle(); view = 'chronicle'; }); break;
       case 'chronicle-goto': {
         const index = Number(target.dataset.index);
@@ -722,7 +617,7 @@
         target.setAttribute('aria-label', book.state.fontSize === 'large' ? '恢复标准大字' : '进一步放大字号');
         save(); toast(book.state.fontSize === 'large' ? '已切换为更大的阅读字号' : '已恢复标准大字'); break;
       }
-      case 'preview-role': previewRole = target.dataset.role; biographyPage = 0; mobileRolePage = 1; render(); if (innerWidth > 760) document.querySelector(`[data-role="${previewRole}"]`)?.focus({ preventScroll: true }); else { window.MobileReader?.sync({ ...mobileConfig(), resetScroll: true }); window.MobileReader?.enter(1); } break;
+      case 'preview-role': if(!DATA.roles.some(role=>role.id===target.dataset.role)) break; previewRole = target.dataset.role; biographyPage = 0; mobileRolePage = 0; render(); if (innerWidth > 760) document.querySelector(`[data-role="${previewRole}"]`)?.focus({ preventScroll: true }); else { window.MobileReader?.sync({ ...mobileConfig(), resetScroll: true }); window.MobileReader?.enter(1); } break;
       case 'choose-role': {
         const starting = restartRolePath || book.state.ending || previewRole !== book.state.role;
         const chapter = starting ? 0 : book.state.chapter;
@@ -732,7 +627,7 @@
         turn(() => { view = 'reading'; }, false, starting); break;
       }
       case 'roles': restartRolePath=['chronicle','routes'].includes(view); previewRole = book.state.role || DATA.roles[0].id; biographyPage = 0; mobileRolePage = 0; turn(() => { view = 'roles'; }, true,true); break;
-      case 'mission-role': if(DATA.roles.some(role=>role.id===target.dataset.role)){restartRolePath=true; previewRole=target.dataset.role; biographyPage=0; mobileRolePage=1;turn(()=>{view='roles';},false,true);} break;
+      case 'mission-role': if(DATA.roles.some(role=>role.id===target.dataset.role)){restartRolePath=true; previewRole=target.dataset.role; biographyPage=0; mobileRolePage=0;turn(()=>{view='roles';},false,true);} break;
       case 'return-reading': view = book.state.mode === 'chronicle' ? 'chronicle' : book.state.ending ? 'ending' : 'reading'; render(); break;
       case 'game-hint': gameHint = !gameHint; refreshGame(); document.querySelector('[data-action="game-hint"]')?.focus({ preventScroll: true }); break;
       case 'game-reset': playGame('reset', ''); break;
@@ -785,22 +680,8 @@
       event.preventDefault(); window.MobileReader.move(event.key === 'ArrowRight' ? 1 : -1);
       return;
     }
-    if (view === 'genealogy' && ['ArrowLeft', 'ArrowRight'].includes(event.key)) {
-      event.preventDefault(); act(genealogyMode === 'guide' ? event.key === 'ArrowRight' ? 'genealogy-guide-next' : 'genealogy-guide-previous' : event.key === 'ArrowRight' ? 'genealogy-next' : 'genealogy-previous'); return;
-    }
-    if (view === 'reading' && event.target.closest('.story-page') && ['ArrowLeft', 'ArrowRight'].includes(event.key)) {
-      event.preventDefault(); turnStory(event.key === 'ArrowRight' ? 1 : -1); return;
-    }
-    if (view === 'chronicle') {
-      if (event.target.closest('.history-story-page') && ['ArrowLeft', 'ArrowRight'].includes(event.key)) {
-        event.preventDefault(); turnChroniclePage(event.key === 'ArrowRight' ? 1 : -1); return;
-      }
-      if (event.key === 'ArrowRight') { event.preventDefault(); act('chronicle-next'); }
-      if (event.key === 'ArrowLeft') { event.preventDefault(); act('chronicle-previous'); }
-    }
-    if (view === 'reading' || view === 'ending') {
-      if (event.key === 'ArrowRight') { event.preventDefault(); act('next'); }
-      if (event.key === 'ArrowLeft') { event.preventDefault(); act('previous'); }
+    if (!['cover','intro'].includes(view) && ['ArrowLeft','ArrowRight'].includes(event.key)) {
+      event.preventDefault(); moveSpread(event.key==='ArrowRight'?1:-1);
     }
   });
   document.addEventListener('visibilitychange', () => { if (document.hidden) stopSound(); });

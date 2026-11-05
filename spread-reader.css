@@ -1,0 +1,76 @@
+/* One pair of leaves, one reading direction. Illustration leads the story. */
+.reader-back-button{width:40px;min-height:44px;font-size:22px;color:var(--red);margin-right:10px;flex-shrink:0}
+.reading-header .brand-button{margin-right:auto}
+.spread-navigation{display:grid;grid-template-columns:1fr minmax(140px,1.4fr)1fr;gap:20px;min-height:46px}
+.reader-turn{display:flex;align-items:center;min-height:44px;font-size:15px;color:var(--red);justify-self:start;letter-spacing:.04em}
+.reader-turn:last-child{justify-self:end}
+.reader-turn:disabled{opacity:.4;cursor:default}
+.reader-position{text-align:center;color:#856647;font-size:13px;line-height:1.6}
+.reader-position small{display:block;font-size:11px;color:#9b7d59;margin-top:3px}
+.open-book>.page .leaf-footer{justify-content:space-between;min-height:24px;border-top:0;padding-top:4px}
+.leaf-scroll-hint{font-size:10px;line-height:1.8;color:#947b58;letter-spacing:.06em;margin-left:auto;pointer-events:none}
+.reader-detail{width:100%;margin:15px 0 12px;border-top:1px solid #9b784844;text-align:left}
+.reader-detail>summary{cursor:pointer;color:#794249;min-height:44px;padding:12px 0;font-size:14px;line-height:1.8}
+.reader-detail[open]>summary{margin-bottom:12px}
+.reader-detail p{font-size:var(--reading-body);line-height:1.95;margin:0 0 18px;color:#594432}
+.reader-detail section+section{margin-top:24px;padding-top:16px;border-top:1px solid #9b78482b}
+.reader-detail h3{font-size:21px;font-weight:400;line-height:1.7;color:#71393e}
+.story-page .story-opening{display:flex;flex-direction:column;align-items:stretch;gap:16px;margin:17px 0 14px}
+.story-page .chapter-page-heading{text-align:left;display:block}
+.story-page .chapter-page-heading .chapter-year{font-size:28px;line-height:1.2;margin:0 0 6px}
+.story-page .chapter-page-heading h2{font-size:25px;line-height:1.5}
+.story-page .chapter-date{font-size:12px;margin-top:6px}
+.story-page .chapter-scene{width:100%;max-width:none;margin:0}
+.story-page .chapter-scene .art-reserve{height:clamp(220px,37vh,340px);aspect-ratio:auto}
+.story-page .chapter-scene img{object-fit:contain}
+.story-brief,.biography-summary{font-size:var(--reading-body);line-height:1.9;text-align:left;color:#5b4331;margin:8px 0 12px}
+.role-page .role-frontispiece{padding-top:20px}
+.role-page .role-portrait-heading{grid-template-columns:46% minmax(0,1fr);align-items:center;gap:22px;text-align:left;width:100%}
+.role-page .role-portrait-heading .role-arch.portrait-reserve,.role-page .role-portrait-heading .role-arch.portrait-reserve:has(img){width:100%;max-width:none;height:280px;margin:0}
+.role-page .role-portrait-heading .role-arch img{object-fit:contain}
+.role-page .role-biography{width:100%;margin-top:18px;padding-top:0;border:0}
+.role-page .role-grid{gap:10px;margin:15px 0}
+.role-page .role-card{display:grid;grid-template-columns:64px minmax(0,1fr);column-gap:10px;align-items:center;padding:8px;min-height:104px}
+.role-page .role-card>img{grid-column:1;grid-row:1/3;display:block;width:64px;height:86px;object-fit:contain}
+.role-page .role-card strong{font-size:14px;white-space:normal;line-height:1.7;align-self:end}
+.role-page .role-card small{font-size:11px;line-height:1.7;letter-spacing:0;align-self:start;margin-top:3px}
+.role-page .role-mission{margin:12px 0;padding-top:12px}
+.role-page .role-mission h3{font-size:20px;margin:5px 0}
+.role-page .role-mission p{font-size:15px;line-height:1.85}
+.role-page .selection-heading{font-size:25px;letter-spacing:.02em}
+.role-page .selection-intro{font-size:15px;max-width:none}
+.mobile-directory-extras{display:block;margin-top:12px}
+.mobile-bookmark{min-height:44px;font-size:14px;color:var(--red)}
+.atlas-dialog{width:min(650px,calc(100vw - 30px));max-height:calc(100dvh - 36px);overflow:auto;overscroll-behavior:contain}
+.atlas-dialog>.dialog-header{position:sticky;top:-1px;background:#eee2c8;z-index:6;margin-bottom:0}
+.atlas-dialog .history-atlas{margin-top:8px}
+.atlas-dialog .atlas-map{max-width:490px;margin-left:auto;margin-right:auto}
+.genealogy-base,.chapter-dots{display:none}
+@media(max-width:760px){
+ .mobile-reader-screen .reader-back-button{width:36px;min-width:36px;min-height:40px;margin:0;padding:0}
+ .mobile-reader-screen .reader-back-button+.brand-button{display:none}
+ .mobile-reader-screen .open-book>.page .leaf-footer{min-height:23px;padding-top:2px;justify-content:space-between}
+ .mobile-reader-screen .leaf-footer>.page-number{display:block;min-height:0;padding:0;font-size:9px}
+ .mobile-reader-screen .toolbar>[data-action="resume-bookmark"]{display:none}
+ .mobile-reader-screen .mobile-tools-open .toolbar>[data-action="resume-bookmark"]{display:inline-flex}
+ .mobile-reader-screen .story-page .story-opening{gap:12px;margin-top:15px}
+ .mobile-reader-screen .story-page .chapter-scene{max-width:none}
+ .mobile-reader-screen .story-page .chapter-scene .art-reserve{height:clamp(200px,35dvh,290px)}
+ .mobile-reader-screen .story-page .chapter-page-heading h2{font-size:24px}
+ .mobile-reader-screen .story-page .chapter-page-heading .chapter-year{font-size:27px}
+ .mobile-reader-screen .role-portrait-heading{grid-template-columns:46% minmax(0,1fr);gap:16px}
+ .mobile-reader-screen .role-portrait-heading .role-arch.portrait-reserve,.mobile-reader-screen .role-portrait-heading .role-arch.portrait-reserve:has(img){width:100%;max-width:none;height:240px;margin:0}
+ .mobile-reader-screen .role-page .role-card{grid-template-columns:48px minmax(0,1fr);gap:7px;padding:7px;min-height:92px}
+ .mobile-reader-screen .role-page .role-card img{width:48px;height:74px}
+ .mobile-reader-screen .role-page .role-card strong{font-size:13px}
+ .mobile-reader-screen .role-page .role-card small{font-size:10px}
+ .reader-detail>summary{font-size:15px}
+ .atlas-dialog{padding:17px;max-height:calc(100dvh - 24px)}
+ .atlas-dialog>.dialog-header{top:-17px;padding-top:12px;padding-bottom:10px}
+}
+@media(max-width:350px){
+ .mobile-reader-screen .role-page .role-card{grid-template-columns:42px minmax(0,1fr);gap:5px}
+ .mobile-reader-screen .role-page .role-card img{width:42px;height:65px}
+ .mobile-reader-screen .role-page .role-card strong{font-size:12px}
+ .mobile-reader-screen .role-portrait-heading .role-arch.portrait-reserve,.mobile-reader-screen .role-portrait-heading .role-arch.portrait-reserve:has(img){height:200px}
+}

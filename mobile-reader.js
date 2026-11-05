@@ -61,18 +61,25 @@ window.MobileReader = (() => {
   }
   function navigation() {
     if (!nav || !config) return;
-    const last = config.index === config.steps.length - 1;
-    const advance = last && config.onAdvance && config.advanceLabel;
-    const retreat = config.index === 0 && config.onRetreat && config.retreatLabel;
-    const focused = nav.contains(document.activeElement) ? { index:document.activeElement.dataset.mobileIndex, action:document.activeElement.dataset.mobileAction } : null;
+    const first = config.index === 0, last = config.index === config.steps.length - 1;
+    const retreat = first && typeof config.onRetreat === 'function';
+    const advance = last && typeof config.onAdvance === 'function';
+    const previousDisabled = retreat ? Boolean(config.retreatDisabled) : first;
+    const nextDisabled = advance ? Boolean(config.advanceDisabled) : last;
+    const previousReason = previousDisabled ? config.retreatDisabledReason || '已经是第一页' : '';
+    const nextReason = nextDisabled ? config.advanceDisabledReason || (advance ? '请先完成这一页的互动' : '已经是最后一页') : '';
+    const focused = nav.contains(document.activeElement)
+      ? document.activeElement.classList.contains('mobile-page-previous') ? 'previous' : 'next'
+      : null;
     nav.dataset.mobilePage = String(config.index);
+    nav.dataset.mobileCount = String(config.steps.length);
     nav.setAttribute('aria-label', '书页翻阅');
-    const context = config.contextLabel || config.onBack || config.onChapterPrevious || config.onChapterNext
-      ? `<div class="mobile-reader-context" aria-label="阅读位置与返回">${config.onBack ? `<button type="button" class="mobile-reader-back" data-mobile-action="back" aria-label="${escape(config.backLabel || '返回上一级')}" ${config.backDisabled ? 'disabled' : ''}><span aria-hidden="true">↶</span>${escape(config.backLabel || '返回')}</button>` : ''}<span class="mobile-reader-context-label" title="${escape(config.contextLabel || '')}">${escape(config.contextLabel || '')}</span>${config.onChapterPrevious || config.onChapterNext ? `<div class="mobile-chapter-controls" role="group" aria-label="章节切换">${config.onChapterPrevious ? `<button type="button" data-mobile-action="chapter-previous" aria-label="${escape(config.chapterPreviousLabel || '返回上一章')}" ${config.chapterPreviousDisabled ? 'disabled' : ''}>${escape(config.chapterPreviousLabel || '上一章')}</button>` : ''}${config.onChapterNext ? `<button type="button" data-mobile-action="chapter-next" aria-label="${escape(config.chapterNextLabel || '前往下一章')}" ${config.chapterNextDisabled ? 'disabled' : ''}>${escape(config.chapterNextLabel || '下一章')}</button>` : ''}</div>` : ''}</div>` : '';
-    nav.innerHTML = `${context}<div class="mobile-page-tabs" role="group" aria-label="这一叠书页">${config.steps.map((step, index) => `<button type="button" data-mobile-index="${index}" aria-pressed="${index === config.index}"${index === config.index ? ' aria-current="page"' : ''}><i aria-hidden="true"></i><span>${escape(step.label)}</span></button>`).join('')}</div><div class="mobile-page-controls"><button type="button" class="mobile-page-previous${retreat ? ' mobile-page-retreat' : ''}" data-mobile-action="${retreat ? 'retreat' : 'previous'}" data-action="${retreat ? 'mobile-retreat' : 'mobile-previous'}" ${retreat ? config.retreatDisabled ? 'disabled' : '' : config.index === 0 ? 'disabled' : ''}><span aria-hidden="true">←</span> ${escape(retreat ? config.retreatLabel : '前一页')}</button><span class="mobile-page-position" aria-live="off">${config.index + 1}<i>/</i>${config.steps.length}</span><button type="button" class="mobile-page-next${advance ? ' mobile-page-advance' : ''}" data-mobile-action="${advance ? 'advance' : 'next'}" data-action="${advance ? 'mobile-advance' : 'mobile-next'}" ${advance ? config.advanceDisabled ? 'disabled' : '' : last ? 'disabled' : ''}>${escape(advance ? config.advanceLabel : '后一页')} <span aria-hidden="true">→</span></button></div>`;
+    const pageNumber=(config.pageOffset || 0)+config.index+1, pageTotal=config.pageTotal || config.steps.length;
+    const position = config.positionLabel ? `<span class="mobile-page-location">${escape(config.positionLabel)}</span>` : '';
+    nav.innerHTML = `<div class="mobile-page-controls"><button type="button" class="mobile-page-previous" data-mobile-action="${retreat ? 'retreat' : 'previous'}" data-action="${retreat ? 'mobile-retreat' : 'mobile-previous'}"${previousDisabled ? ` disabled title="${escape(previousReason)}"` : ''}><span aria-hidden="true">←</span><span>前一页</span></button><span class="mobile-page-position" role="status" aria-live="polite" aria-atomic="true" aria-label="${escape(config.positionLabel ? config.positionLabel + '，' : '')}第 ${pageNumber} 页，共 ${pageTotal} 页">${position}<span class="mobile-page-count">${pageNumber}<i>/</i>${pageTotal}</span></span><button type="button" class="mobile-page-next" data-mobile-action="${advance ? 'advance' : 'next'}" data-action="${advance ? 'mobile-advance' : 'mobile-next'}"${nextDisabled ? ` disabled title="${escape(nextReason)}"` : ''}><span>后一页</span><span aria-hidden="true">→</span></button></div>`;
     if (focused) {
-      const restored = focused.index != null ? nav.querySelector(`[data-mobile-index="${focused.index}"]`) : nav.querySelector(`[data-mobile-action="${focused.action}"]`);
-      (restored && !restored.disabled ? restored : nav.querySelector('[aria-current="page"]'))?.focus({preventScroll:true});
+      const restored = nav.querySelector(`.mobile-page-${focused}`);
+      (restored && !restored.disabled ? restored : activePage?.querySelector('.leaf-content'))?.focus({preventScroll:true});
     }
   }
   function setVisibility() {
@@ -155,14 +162,10 @@ window.MobileReader = (() => {
     const button = event.target.closest('button');
     if (!button || button.disabled) return;
     event.preventDefault(); event.stopPropagation();
-    if (button.dataset.mobileIndex != null) request(Number(button.dataset.mobileIndex));
-    else if (button.dataset.mobileAction === 'previous') request(config.index - 1);
+    if (button.dataset.mobileAction === 'previous') request(config.index - 1);
     else if (button.dataset.mobileAction === 'next') request(config.index + 1);
     else if (button.dataset.mobileAction === 'advance') request(config.index, true);
     else if (button.dataset.mobileAction === 'retreat') request(config.index, false, true);
-    else if (button.dataset.mobileAction === 'back') back();
-    else if (button.dataset.mobileAction === 'chapter-previous') invoke(config.onChapterPrevious, config.chapterPreviousDisabled);
-    else if (button.dataset.mobileAction === 'chapter-next') invoke(config.onChapterNext, config.chapterNextDisabled);
   }
   const ignored = 'button,a,input,textarea,select,summary,[contenteditable="true"],[draggable="true"],.mobile-reader-nav,.history-atlas-map,.atlas-map,[data-no-page-swipe]';
   const readableGameText = '.ma-inner-voice,.ma-decision-outcome,.ma-history-note,.ma-inline-note,.ma-answer-note';
