@@ -1,5 +1,7 @@
 /* Focused routing, narrative pagination and readable-tail regression.
- * PLAYWRIGHT_PATH=/path/to/playwright node tests/stories-browser.test.cjs
+ * PLAYWRIGHT_PATH=/path/to/playwright node tests/stories-browser.test.cjs --desktop-only
+ * Legacy mobile branches below assume both leaves and their inner pagers are
+ * visible. Current mobile pagination is covered by mobile-reader.test.cjs.
  */
 const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
 const assert = require('node:assert/strict');
@@ -12,6 +14,7 @@ const out = path.join(root, 'output', 'stories-review');
 const url = pathToFileURL(path.join(root, 'index.html')).href;
 const key = 'wars-of-the-roses-manuscript-v1';
 const games = loadGames();
+const desktopOnly = process.argv.includes('--desktop-only');
 let fixtureId = 0;
 const errors = [], measurements = [];
 const click = async (page, action) => {
@@ -30,7 +33,8 @@ async function openDirectory(page) {
   assert.equal(await page.locator('.reading-book,.chronicle-book,.ending-book').count(), 0,
     'opening the book must first show the route directory, including with a bookmark');
   assert.equal(await page.locator('.routes-book [data-action="roles"]').count(), 1);
-  assert.equal(await page.locator('.routes-book [data-action="chronicle"]').count(), 1);
+  assert.equal(await page.locator('.routes-book .history-milestones [data-action="chronicle-goto"]').count(), 7);
+  assert.match(await page.locator('.history-introduction h1').innerText(), /为什么叫作玫瑰战争/);
 }
 async function fixture(page, saved) {
   // pagehide saves the outgoing book. Apply each fixture once on the next load,
@@ -255,7 +259,7 @@ async function assertMobileBiographyTurn(page) {
     assert.equal((await state(page)).storyPages.edward[data.chapters[0]],1,'returning to contents does not reset the story position');
     console.log('PASS independent story pagination, keyboard, live game preservation, draft decision and refresh/resume');
 
-    for (const [width,height,font] of [[1280,620,'standard'],[900,650,'large'],[390,844,'standard'],[320,740,'large']]) {
+    for (const [width,height,font] of [[1280,620,'standard'],[900,650,'large'],[390,844,'standard'],[320,740,'large']].filter(([width])=>!desktopOnly||width>760)) {
       await page.setViewportSize({width,height});
       await fixture(page,await manuscript(page,'elizabeth',5,font)); await openDirectory(page); await resume(page);
       await assertFrame(page,width+' '+font+' story');
@@ -274,8 +278,8 @@ async function assertMobileBiographyTurn(page) {
       await click(page,'routes'); await assertFrame(page,width+' '+font+' directory');
     }
     assert.deepEqual(errors,[]);
-    fs.writeFileSync(path.join(out,'report.json'),JSON.stringify({errors,measurements},null,2));
-    console.log('PASS short desktop / 900px / 390px / 320px, standard and large fonts, biography/story final lines; 0 runtime errors');
+    fs.writeFileSync(path.join(out,desktopOnly?'desktop-report.json':'report.json'),JSON.stringify({errors,measurements},null,2));
+    console.log(desktopOnly ? 'PASS desktop narrative pages, bookmarks, short desktop / 900px, standard and large fonts, readable final lines; 0 runtime errors' : 'PASS short desktop / 900px / 390px / 320px, standard and large fonts, biography/story final lines; 0 runtime errors');
   } catch(error) {
     console.error('Runtime errors:',errors);
     if (active) await active.screenshot({path:path.join(out,'failure.png'),timeout:3000,fullPage:true}).catch(()=>{});

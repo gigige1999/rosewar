@@ -7,7 +7,7 @@ const { solveActions: solveMixed } = require('./activities.test.cjs');
 const { solveActions: solveOld } = require('./minigames.test.cjs');
 const root = path.resolve(__dirname, '..');
 const context = vm.createContext({ window: {} });
-for (const file of ['assets/ornaments.js', 'content.js', 'stories-lancaster.js', 'stories-york.js', 'stories-court.js', 'minigames.js', 'activity-data.js', 'mixed-activities.js', 'engine.js']) {
+for (const file of ['assets/ornaments.js', 'content.js', 'history-content.js', 'stories-lancaster.js', 'stories-york.js', 'stories-court.js', 'minigames.js', 'activity-data.js', 'mixed-activities.js', 'engine.js']) {
   vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), context);
 }
 const BookEngine = context.window.BookEngine;
@@ -64,11 +64,83 @@ test('fresh v4 keeps decisions, migrated evidence and reading modes separate', (
   assert.deepEqual(plain(engine.serialize()), {
     version: 4, role: null, chapter: 0, completed: [], selections: {}, legacyCompleted: [], legacyGames: {}, legacyChoices: {},
     ending: false, sound: false, mode: null, chronicleIndex: 0, chronicleRead: [],
-    fontSize: 'standard', coverLanguage: 'zh', games: {}, storyPages: {}, readingSides: {}, chronicleSide: 'illustration'
+    fontSize: 'standard', coverLanguage: 'zh', games: {}, storyPages: {}, readingSides: {}, chronicleSide: 'illustration', chroniclePages: {}, replayEvidence: {}
   });
   assert.equal(engine.game, null);
   assert.equal(engine.next(), false);
   assert.equal(engine.actGame('march', '1').changed, false);
+});
+
+test('history milestones keep independent prose bookmarks across refresh and map visits', () => {
+  let engine = new BookEngine(data);
+  assert.equal(context.window.BOOK_HISTORY.milestones.length, data.chapters.length);
+  assert.equal(engine.setChroniclePage(1), false, 'closed book cannot write a history bookmark');
+  for (let index = 0; index < data.chapters.length; index++) {
+    assert.equal(engine.openChronicle(index), true);
+    assert.equal(engine.chroniclePageCount(), 3);
+    assert.equal(engine.chroniclePage, 0);
+    assert.equal(engine.setChroniclePage(index % 3), true);
+  }
+  assert.equal(engine.setChronicleSide('timeline'), true);
+  engine = new BookEngine(data, JSON.stringify(engine.serialize()));
+  assert.equal(engine.state.chronicleIndex, 6);
+  assert.equal(engine.state.chronicleSide, 'timeline');
+  for (let index = 6; index >= 0; index--) {
+    engine.openChronicle(index);
+    assert.equal(engine.chroniclePage, index % 3, 'each milestone resumes its own prose page');
+  }
+  assert.equal(engine.setChronicleSide('illustration'), true);
+  engine.selectRole('margaret');
+  assert.equal(engine.setChroniclePage(2), false, 'character reading cannot rewrite a historical bookmark');
+  engine.openChronicle(5);
+  assert.equal(engine.chroniclePage, 2);
+});
+
+test('history prose rejects invalid bookmarks and migrates v4 saves without the optional field', () => {
+  const engine = new BookEngine(data);
+  engine.openChronicle(3); engine.setChroniclePage(2);
+  for (const page of [-1, 3, 10, 1.5, '1', null, [], {}, NaN, Infinity]) {
+    assert.equal(engine.setChroniclePage(page), false);
+    assert.equal(engine.chroniclePage, 2);
+  }
+  const base = plain(engine.serialize());
+  for (const invalid of [null, [], '2', 2, {3:'2'}, {3:3}, {3:-1}, {3:1.5}, {99:2}, {forged:1}]) {
+    const restored = new BookEngine(data, {...base, chroniclePages:invalid});
+    assert.deepEqual(plain(restored.state.chroniclePages), {});
+    assert.equal(restored.chroniclePage, 0);
+    assert.equal(restored.state.chronicleIndex, 3);
+  }
+  const sanitized = new BookEngine(data, {...base,chroniclePages:{0:1,3:2,6:0,1:'1',2:3,7:1,forged:1}});
+  assert.deepEqual(plain(sanitized.state.chroniclePages), {0:1,3:2,6:0});
+  delete base.chroniclePages;
+  const migrated = new BookEngine(data, base);
+  assert.equal(migrated.chroniclePage, 0);
+  assert.deepEqual(plain(migrated.state.chronicleRead), [3]);
+  assert.equal(migrated.state.mode, 'chronicle');
+});
+
+test('all 21 history pages preserve character drafts and cannot complete or unlock activities', () => {
+  let engine = started('edward');
+  engine.actGame('choose-option', games.meta('edward', 0).options[1].id);
+  engine.setStoryPage(1); engine.setReadingSide('interaction');
+  const before = plain(engine.serialize());
+  for (let index = 0; index < data.chapters.length; index++) {
+    engine.openChronicle(index);
+    for (let page = 0; page < engine.chroniclePageCount(); page++) assert.equal(engine.setChroniclePage(page), true);
+    engine.setChronicleSide('timeline');
+  }
+  engine = new BookEngine(data, engine.serialize());
+  for (const field of ['role','chapter','completed','games','selections','legacyCompleted','legacyGames','legacyChoices','storyPages','readingSides']) {
+    assert.deepEqual(plain(engine.state[field]), before[field], 'history leaves preserve ' + field);
+  }
+  assert.equal(engine.isUnlocked(1), false);
+  assert.equal(engine.isComplete(), false);
+  assert.equal(engine.next(), false);
+  assert.deepEqual(plain(engine.state.chronicleRead), [0,1,2,3,4,5,6]);
+  engine.selectRole('edward');
+  assert.equal(engine.storyPage, 1);
+  assert.equal(engine.readingSide, 'interaction');
+  assert.deepEqual(plain(engine.game), before.games.edward[data.chapters[0].id]);
 });
 
 test('story leaves retain independent role and chapter bookmarks through refresh', () => {
@@ -271,6 +343,145 @@ for (const role of data.roles) {
     assert.equal(engine.previous(), false);
   });
 }
+
+test('a confirmed decision can be explicitly revisited and replaced without losing reading access', () => {
+  let engine = started('edward');
+  const chapter = data.chapters[0].id;
+  const options = games.meta('edward',0).options;
+  engine.actGame('choose-option',options[0].id);
+  engine.actGame('decision-confirm','');
+  const first = plain(engine.game);
+  assert.equal(engine.decisions()[0].id,options[0].id);
+  assert.equal(engine.actGame('reset').changed,false,'the normal reducer still protects a confirmed decision');
+  assert.equal(engine.revisitActivity(),true);
+  assert.deepEqual(plain(engine.state.replayEvidence),{edward:{[chapter]:first}});
+  assert.deepEqual(plain(engine.game),plain(games.initial('edward',0)));
+  assert.equal(engine.isComplete(),false);
+  assert.equal(engine.next(),false,'the replacement must be confirmed before advancing from this activity');
+  assert.equal(engine.isUnlocked(1),true,'previously read pages remain accessible');
+  assert.deepEqual(plain(engine.decisions()),[],'the archived decision is not presented as the new decision');
+  engine = new BookEngine(data,JSON.stringify(engine.serialize()));
+  assert.equal(engine.isUnlocked(1),true);
+  assert.equal(engine.isComplete(),false);
+  assert.deepEqual(plain(engine.state.replayEvidence.edward[chapter]),first);
+  engine.actGame('choose-option',options[1].id);
+  engine = new BookEngine(data,engine.serialize());
+  assert.equal(engine.game.payload.selected,options[1].id,'the new unconfirmed intention survives refresh');
+  assert.equal(engine.isComplete(),false);
+  engine.actGame('decision-confirm','');
+  assert.equal(engine.isComplete(),true);
+  assert.equal(engine.decisions().length,1);
+  assert.equal(engine.decisions()[0].id,options[1].id);
+  assert.deepEqual(plain(engine.state.replayEvidence.edward[chapter]),plain(engine.game),'only the latest completed result is retained');
+  assert.equal(engine.revisitActivity(),true);
+  assert.equal(engine.state.replayEvidence.edward[chapter].payload.selected,options[1].id);
+  assert.deepEqual(Object.keys(engine.state.replayEvidence.edward),[chapter],'repeated revisits do not accumulate history');
+  const snapshot = engine.serialize();
+  snapshot.replayEvidence.edward[chapter].payload.selected = 'changed outside the engine';
+  assert.equal(engine.state.replayEvidence.edward[chapter].payload.selected,options[1].id,'serialized replay evidence is an independent snapshot');
+});
+
+test('replaying a miniature keeps a continuous reading trail through refresh and later chapters', () => {
+  let engine = started('margaret');
+  assert.notEqual(games.meta('margaret',0).kind,'choice');
+  for (let index=0; index<3; index++) {
+    assert.equal(engine.state.chapter,index); solve(engine); engine.next();
+  }
+  const completed = plain(engine.state.completed);
+  const laterGames = plain(engine.state.games.margaret);
+  engine.goTo(0);
+  const first = plain(engine.game);
+  assert.equal(engine.revisitActivity(),true);
+  assert.deepEqual(plain(engine.game),plain(games.initial('margaret',0)));
+  assert.equal(engine.isComplete(),false);
+  assert.deepEqual(plain(engine.state.completed),completed);
+  assert.equal(engine.goTo(3),true,'the old reading trail remains navigable during the replay');
+  engine = new BookEngine(data,JSON.stringify(engine.serialize()));
+  assert.equal(engine.state.chapter,3,'refresh does not pull the reader back behind a replaying chapter');
+  assert.deepEqual(plain(engine.state.completed),completed);
+  assert.equal(engine.isUnlocked(3),true);
+  engine.goTo(0);
+  assert.deepEqual(plain(engine.state.replayEvidence.margaret[data.chapters[0].id]),first);
+  for (const index of [1,2]) assert.deepEqual(plain(engine.state.games.margaret[data.chapters[index].id]),laterGames[data.chapters[index].id]);
+  solve(engine);
+  assert.equal(engine.next(),true,'the miniature remains playable after a refresh');
+  assert.deepEqual(plain(engine.state.completed),completed,'replay does not duplicate completion entries');
+  engine.reset();
+  assert.deepEqual(plain(engine.state.replayEvidence),{});
+});
+
+test('revisiting one activity preserves every other witness, chapter and reading bookmark', () => {
+  let engine = started('edward');
+  solve(engine); engine.next(); solve(engine);
+  engine.selectRole('margaret'); solve(engine);
+  engine.selectRole('edward'); engine.goTo(0);
+  engine.setStoryPage(1); engine.setReadingSide('interaction');
+  const before = plain(engine.serialize());
+  assert.equal(engine.revisitActivity(),true);
+  assert.deepEqual(plain(engine.state.games.margaret),before.games.margaret);
+  assert.deepEqual(plain(engine.state.games.edward[data.chapters[1].id]),before.games.edward[data.chapters[1].id]);
+  for (const field of ['role','chapter','completed','storyPages','readingSides','chroniclePages','legacyGames','legacyChoices']) {
+    assert.deepEqual(plain(engine.state[field]),before[field],'revisit preserves '+field);
+  }
+  engine = new BookEngine(data,engine.serialize());
+  assert.equal(engine.storyPage,1);
+  assert.equal(engine.readingSide,'interaction');
+  assert.equal(engine.isUnlocked(2),true);
+  engine.selectRole('margaret'); engine.goTo(1);
+  assert.equal(engine.isComplete(),true,'the other witness retains their completed activity');
+});
+
+test('revisit rejects closed books, unfinished activities and historical reading without changing state', () => {
+  let engine = new BookEngine(data);
+  let before = plain(engine.serialize());
+  assert.equal(engine.revisitActivity(),false);
+  assert.deepEqual(plain(engine.serialize()),before);
+  engine = started('edward');
+  engine.actGame('choose-option',games.meta('edward',0).options[0].id);
+  before = plain(engine.serialize());
+  assert.equal(engine.revisitActivity(),false);
+  assert.deepEqual(plain(engine.serialize()),before);
+  engine.actGame('decision-confirm',''); engine.openChronicle(6);
+  before = plain(engine.serialize());
+  assert.equal(engine.revisitActivity(),false,'a historical detour cannot reset the retained character activity');
+  assert.deepEqual(plain(engine.serialize()),before);
+  engine.selectRole('edward');
+  assert.equal(engine.revisitActivity(),true);
+  before = plain(engine.serialize());
+  assert.equal(engine.revisitActivity(),false,'an in-progress replay cannot overwrite the last completed proof');
+  assert.deepEqual(plain(engine.serialize()),before);
+});
+
+test('replay evidence must be a validated completed activity and cannot invent a continuous reading trail', () => {
+  const genuine = started('edward'); solve(genuine); genuine.revisitActivity();
+  const saved = plain(genuine.serialize()), chapter = data.chapters[0].id;
+  const valid = saved.replayEvidence.edward[chapter];
+  const corruptions = [
+    null, [], 'complete', {edward:[]}, {forged:{[chapter]:valid}}, {edward:{forged:valid}},
+    {edward:{[chapter]:{solved:true}}},
+    {edward:{[chapter]:{...valid,activityId:'another-person-another-chapter'}}},
+    {edward:{[chapter]:{...valid,payload:{...valid.payload,selected:'forged'}}}},
+    {edward:{[chapter]:plain(games.initial('edward',0))}}
+  ];
+  for (const replayEvidence of corruptions) {
+    const restored = new BookEngine(data,{...saved,chapter:6,completed:data.chapters.map(chapter=>chapter.id),replayEvidence});
+    assert.deepEqual(plain(restored.state.replayEvidence),{});
+    assert.deepEqual(plain(restored.state.completed),[]);
+    assert.equal(restored.isUnlocked(1),false);
+    assert.equal(restored.state.chapter,0);
+  }
+  const unfinished = started('edward');
+  unfinished.actGame('choose-option',games.meta('edward',0).options[0].id);
+  const previewProof = new BookEngine(data,{...saved,replayEvidence:{edward:{[chapter]:plain(unfinished.game)}}});
+  assert.deepEqual(plain(previewProof.state.replayEvidence),{},'an unconfirmed psychological choice is not proof');
+  const later = started('edward',oldSave(7)); later.goTo(1); solve(later);
+  const gap = new BookEngine(data,{...saved,chapter:6,replayEvidence:{edward:{[data.chapters[1].id]:plain(later.game)}}});
+  assert.equal(gap.isUnlocked(2),false,'a valid later activity cannot bridge an unproven first chapter');
+  assert.deepEqual(plain(gap.state.completed),[]);
+  const old = {...saved}; delete old.replayEvidence;
+  assert.deepEqual(plain(new BookEngine(data,old).state.replayEvidence),{},'the field is optional in earlier v4 saves');
+  assert.deepEqual(plain(new BookEngine(data,{...saved,version:3}).state.replayEvidence),{},'earlier save formats cannot claim v4 replay evidence');
+});
 
 test('different witnesses retain independent unfinished activities and reading history', () => {
   const role = data.roles[0].id, other = data.roles[1].id;

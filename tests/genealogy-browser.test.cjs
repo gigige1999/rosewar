@@ -1,5 +1,8 @@
 /* Family-tree reading, cross-links, independent bookmarks and small-screen QA.
- * PLAYWRIGHT_PATH=/path/to/playwright node tests/genealogy-browser.test.cjs
+ * PLAYWRIGHT_PATH=/path/to/playwright node tests/genealogy-browser.test.cjs --desktop-only
+ * The complete-reference desktop flow remains valid. Legacy mobile branches
+ * predate single-leaf paging; current mobile paths are in genealogy-guide.test.cjs
+ * and mobile-reader.test.cjs, including the explicit return-to-tree action.
  */
 const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
 const assert = require('node:assert/strict');
@@ -33,6 +36,7 @@ async function click(page, action, scope = '') {
 async function openDirectory(page) {
   await click(page, 'open-book');
   await page.locator('.routes-book').waitFor();
+  assert.equal(await page.locator('.history-milestones [data-action="chronicle-goto"]').count(), 7);
 }
 async function fixture(page, saved) {
   await page.addInitScript(({ key, saved, token }) => {

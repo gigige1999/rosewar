@@ -1,0 +1,25 @@
+/* The host owns its navigation chrome; these insets are inside its WebView. */
+:root{
+  --xhs-safe-top:env(safe-area-inset-top,0px);
+  --xhs-safe-right:env(safe-area-inset-right,0px);
+  --xhs-safe-bottom:env(safe-area-inset-bottom,0px);
+  --xhs-safe-left:env(safe-area-inset-left,0px);
+}
+html{touch-action:manipulation}
+body{-webkit-touch-callout:none;min-height:100vh;min-height:100dvh}
+img{max-width:100%}
+.cover-quiet{min-height:100vh;min-height:100dvh;padding-top:calc(20px + var(--xhs-safe-top));padding-bottom:calc(20px + var(--xhs-safe-bottom))}
+.cover-language{top:calc(27px + var(--xhs-safe-top));right:max(36px,var(--xhs-safe-right))}
+.intro-screen{min-height:100vh;min-height:100dvh;padding:var(--xhs-safe-top) var(--xhs-safe-right) var(--xhs-safe-bottom) var(--xhs-safe-left)}
+.skip-intro{bottom:calc(5% + var(--xhs-safe-bottom))}
+@media(max-width:760px){
+  .mobile-reader-screen{height:100vh;height:100dvh;padding:calc(5px + var(--xhs-safe-top)) max(12px,var(--xhs-safe-right)) calc(5px + var(--xhs-safe-bottom)) max(12px,var(--xhs-safe-left))}
+  .leaf-content{touch-action:pan-y}
+  html.mobile-reader-open #toast{bottom:calc(104px + var(--xhs-safe-bottom))}
+  .cover-quiet{padding-left:max(22px,var(--xhs-safe-left));padding-right:max(22px,var(--xhs-safe-right))}
+  .cover-language{top:calc(17px + var(--xhs-safe-top));right:max(22px,var(--xhs-safe-right))}
+}
+@media(max-width:760px) and (max-height:650px){
+  .mobile-reader-screen{padding-top:var(--xhs-safe-top);padding-bottom:var(--xhs-safe-bottom)}
+  .cover-quiet .cover-stage{padding:16px 0 8px}
+}

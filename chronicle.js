@@ -74,31 +74,62 @@
     }
   ];
   const escape = text => String(text).replace(/[&<>"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
-  function render(index = 0) {
-    index = Math.min(entries.length - 1, Math.max(0, Number(index) || 0));
-    const current = entries[index];
-    return `<section class="page left-page chronicle-page" aria-label="${escape(current.year)} 年纪事画页">
-      <div class="page-running"><span>无名编年史</span><span>CHRONICA · ${String(index + 1).padStart(2, '0')}</span></div>
-      <div class="chronicle-frontispiece">
-        <p class="chronicle-overline">越过阵营，读一场战争的始末</p>
-        <div class="chronicle-year">${current.year}</div>
-        <figure class="chronicle-figure">${window.ArtFrames.render(index, current.title + ' · 预留图版')}<figcaption>${escape(current.caption)}</figcaption></figure>
-        <h2 class="chronicle-title" data-reading-heading tabindex="-1">${escape(current.title)}</h2>
-        <p class="chronicle-date">${escape(current.date)}</p>
-        <p class="chronicle-marginal">${escape(current.marginal)}</p>
-      </div>
-      <div class="page-number">${String(index * 2 + 1).padStart(2, '0')} · CHRONICLE</div>
-    </section>
-    <section class="page right-page chronicle-page" aria-label="战争时间轴">
-      <div class="page-running"><span>一部王国的编年史</span><span>1455 — 1487</span></div>
-      <div class="chronicle-timeline-heading"><h3>时间的针脚</h3><p>轻触年份，展开这一页历史。</p></div>
-      <ol class="chronicle-timeline">${entries.map((entry, entryIndex) => `<li class="chronicle-event${entryIndex === index ? ' is-current' : ''}">
-        <button type="button" class="chronicle-node" data-action="chronicle-goto" data-index="${entryIndex}" aria-expanded="${entryIndex === index}"${entryIndex === index ? ' aria-current="step"' : ''} aria-controls="chronicle-entry-${entryIndex}"><span class="chronicle-node-year">${entry.year}</span><span class="chronicle-node-title">${escape(entry.short)}</span><span class="chronicle-node-mark" aria-hidden="true">${entryIndex === index ? '−' : '+'}</span></button>
-        <div id="chronicle-entry-${entryIndex}" class="chronicle-event-content"${entryIndex !== index ? ' hidden' : ''}>${entryIndex === index ? `${entry.paragraphs.map(paragraph => `<p>${escape(paragraph)}</p>`).join('')}<div class="chronicle-consequence"><span>此后</span><p>${escape(entry.consequence)}</p></div>` : ''}</div>
-      </li>`).join('')}</ol>
-      <p class="chronicle-reader-note">这里没有谜题，也没有被选中的立场。沿着时间，读完每一次王冠易手。</p>
-      <div class="page-number">${String(index * 2 + 2).padStart(2, '0')} · CHRONICLE</div>
+  const validIndex = index => Math.min(entries.length - 1, Math.max(0, Math.trunc(Number(index) || 0)));
+  const milestone = index => window.BOOK_HISTORY.milestones[validIndex(index)];
+  const validPage = (index, page) => Math.min(milestone(index).pages.length - 1, Math.max(0, Math.trunc(Number(page) || 0)));
+  const running = (title, number) => `<div class="page-running"><span>${escape(title)}</span><span>${escape(number)}</span></div>`;
+  const roleNames = {margaret:'安茹的玛格丽特',warwick:'沃里克伯爵',edward:'爱德华四世',beaufort:'玛格丽特·博福特',richard:'理查三世',elizabeth:'约克的伊丽莎白'};
+
+  function missionInvitation(compact = false) {
+    return `<section class="history-mission-invitation"><span class="eyebrow">AFTER THE CHRONICLE</span><h2>看见历史，再成为其中一人</h2><p>同一场战争，对母亲、国王与流亡者意味着不同的事。选一项使命，读人物的前传，再从他的处境重新出发。</p>${compact ? '' : `<div class="history-mission-list">${window.BOOK_HISTORY.missions.map(mission=>`<button type="button" data-action="mission-role" data-role="${escape(mission.role)}"><span>${escape(roleNames[mission.role] || mission.role)}</span><strong>${escape(mission.title)}</strong><small>${escape(mission.description)}</small><i aria-hidden="true">→</i></button>`).join('')}</div>`}<button type="button" class="primary-button history-roles-button" data-action="roles">选择人物与使命 <span aria-hidden="true">→</span></button></section>`;
+  }
+
+  function overview(atlasPlace) {
+    const intro = window.BOOK_HISTORY.introduction;
+    return `<section class="page left-page history-overview-page" aria-label="玫瑰战争的缘起与七个历史里程碑">
+      ${running('卷首 · 历史里程碑','1455 — 1487')}
+      <section class="history-introduction"><span class="eyebrow">THE WARS OF THE ROSES</span><h1 data-reading-heading tabindex="-1">${escape(intro.title)}</h1><p>${escape(intro.summary)}</p><details class="history-introduction-details"><summary>展开缘起 · 王权、家族与两朵玫瑰</summary>${intro.paragraphs.map(paragraph=>`<p>${escape(paragraph)}</p>`).join('')}</details></section>
+      <div class="history-overview-heading"><h2>七次转折，一段王国往事</h2><p>点选年份，分三页读清前因、经过与余波。</p></div>
+      <ol class="history-milestones">${window.BOOK_HISTORY.milestones.map((item,index)=>`<li><button type="button" class="history-milestone" data-action="chronicle-goto" data-index="${index}"><span class="history-milestone-year">${escape(item.year)}</span><span class="history-milestone-copy"><strong>${escape(item.title)}</strong><span>${escape(item.summary)}</span></span><i aria-hidden="true">→</i></button></li>`).join('')}</ol>
+      <aside class="history-family-invitation"><p>名字太多时，先沿一条血脉认人。</p><button type="button" class="text-button" data-action="genealogy">先看人物关系与家族图谱 <span aria-hidden="true">→</span></button></aside>
+      <div class="page-number">卷首 · CHRONICLE</div>
+    </section><section class="page right-page history-overview-page history-map-page" aria-label="战争地点与人物使命">
+      ${running('地图 · 人物使命','BRITANNIA')}
+      ${window.HistoryAtlas.render(0,atlasPlace)}
+      ${missionInvitation()}
+      <div class="page-number">地图 · MISSIONS</div>
     </section>`;
   }
-  window.Chronicle = { entries, render };
+
+  function prose(index = 0, page = 0) {
+    index = validIndex(index); page = validPage(index,page);
+    const current = milestone(index), section = current.pages[page];
+    return `<div class="history-part-label">详读 ${page + 1} / ${current.pages.length} · ${page === 0 ? '前因' : page === current.pages.length - 1 ? '余波' : '经过'}</div><h2 class="history-section-title" tabindex="-1">${escape(section.title)}</h2>${section.paragraphs.map(paragraph=>`<p class="history-paragraph">${escape(paragraph)}</p>`).join('')}${page === current.pages.length - 1 ? `<aside class="history-afterword"><span>这一步之后</span><div>${escape(entries[index].consequence)}</div></aside>` : ''}`;
+  }
+
+  function pagination(index = 0, page = 0) {
+    index = validIndex(index); page = validPage(index,page);
+    const count = milestone(index).pages.length;
+    return `<nav class="history-pagination story-pagination" aria-label="${entries[index].year} 年历史详读翻页"><button type="button" class="story-page-button" data-action="chronicle-page-previous"${page === 0 ? ' disabled' : ''}>← 前一页</button><span>详读 ${page + 1} / ${count}</span><button type="button" class="story-page-button" data-action="${page === count - 1 ? 'chronicle-map' : 'chronicle-page-next'}">${page === count - 1 ? '地图与人物 →' : '继续读 →'}</button></nav>`;
+  }
+
+  function render(index = 0, page = 0, atlasPlace) {
+    index = validIndex(index); page = validPage(index,page);
+    const current = milestone(index), entry = entries[index];
+    return `<section class="page left-page chronicle-page history-story-page" aria-label="${escape(current.year)} 年详细纪事">
+      ${running('全景纪事 · '+ current.year,'CHRONICA · '+String(index+1).padStart(2,'0'))}
+      <div class="history-story-opening${page ? ' history-continuation' : ''}"><div class="history-story-heading"><span class="history-year">${escape(current.year)}</span><h1 data-reading-heading tabindex="-1">${escape(current.title)}</h1><p class="history-date">${escape(entry.date)}</p></div><figure class="history-figure">${window.ArtFrames.render(index, current.title)}<figcaption>${escape(entry.caption)}</figcaption></figure></div>
+      <div class="history-reading-copy">${prose(index,page)}</div>
+      ${pagination(index,page)}<div class="page-number">${String(index+1).padStart(2,'0')} · ${escape(current.year)}</div>
+    </section><section class="page right-page chronicle-page history-map-page" aria-label="${escape(current.year)} 年地图、人物与纪年">
+      ${running('地图 · 页边札记',current.year+' · MARGINALIA')}
+      <nav class="history-year-index" aria-label="跳转历史里程碑">${entries.map((item,i)=>`<button type="button" data-action="chronicle-goto" data-index="${i}"${i === index ? ' aria-current="step"' : ''}>${item.year}</button>`).join('')}</nav>
+      ${window.HistoryAtlas.render(index,atlasPlace)}
+      <section class="history-marginalia" aria-label="本节历史查阅"><details class="history-facts"><summary>展开本节纪年 <span>${current.facts.length} 个关键时刻</span></summary><ol>${current.facts.map(fact=>`<li><time>${escape(fact.date)}</time><p>${escape(fact.event)}</p></li>`).join('')}</ol></details><details class="history-actors"><summary>谁在其中，他们想守住什么 <span>${current.actors.length} 位人物</span></summary><ul>${current.actors.map(actor=>`<li><strong>${escape(actor.name)}</strong><span>${escape(actor.side)}</span><p>${escape(actor.aim)}</p></li>`).join('')}</ul></details><aside class="history-source-note"><span>读史时留意</span><p>${escape(current.uncertainty)}</p></aside></section>
+      ${missionInvitation(true)}
+      <button type="button" class="text-button history-family-link" data-action="genealogy">沿家谱认清关系 <span aria-hidden="true">→</span></button>
+      <div class="page-number">${escape(current.year)} · ATLAS</div>
+    </section>`;
+  }
+  window.Chronicle = { entries, render, overview, prose, pagination };
 })();

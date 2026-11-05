@@ -1,4 +1,8 @@
-/* PLAYWRIGHT_PATH=/path/to/playwright node tests/browser.test.cjs */
+/* PLAYWRIGHT_PATH=/path/to/playwright node tests/browser.test.cjs --desktop-only
+ * Legacy mobile branches assume simultaneous story/game leaves and desktop
+ * toolbar access. Use mobile-reader.test.cjs and history-reader.test.cjs for
+ * the current single-leaf mobile reader; these branches are retained as notes.
+ */
 const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -11,6 +15,7 @@ fs.mkdirSync(output, { recursive: true });
 const url = pathToFileURL(path.join(root, 'index.html')).href;
 const storageKey = 'wars-of-the-roses-manuscript-v1';
 const games = loadGames();
+const desktopOnly = process.argv.includes('--desktop-only');
 const errors = [];
 const click = (page, action) => page.locator('[data-action="' + action + '"]').first().click();
 const state = page => page.evaluate(key => JSON.parse(localStorage.getItem(key)), storageKey);
@@ -43,7 +48,7 @@ async function open(page, destination = 'open-book') {
     await page.locator('.skip-intro').click({ timeout: 1800 }).catch(() => {});
   }
   await page.locator('.routes-book').waitFor();
-  if (destination === 'open-chronicle') await page.locator('.routes-book [data-action="chronicle"]').click();
+  if (destination === 'open-chronicle') await page.locator('.history-milestones [data-action="chronicle-goto"][data-index="0"]').click();
   else if (await page.locator('[data-action="resume-bookmark"]').count()) await click(page, 'resume-bookmark');
 }
 async function choose(page, role) { await click(page, 'roles'); await page.locator('[data-role="' + role + '"]').click(); await click(page, 'choose-role'); }
@@ -95,6 +100,13 @@ async function previewDirectoryMode(page, role, index, chapters) {
   await page.locator('[data-role="' + (role === 'edward' ? 'margaret' : 'edward') + '"]').click();
   assert.equal((await state(page)).role, role);
   assert.equal((await state(page)).mode, 'chronicle');
+  await click(page, 'timeline');
+  assert.equal(await page.locator('.timeline-list [data-action="chronicle-goto"]').count(), 7,
+    'previewing a witness retains the free historical timeline until a role is explicitly chosen');
+  await click(page, 'dismiss');
+  await page.locator('[data-action="preview-role"][data-role="' + role + '"]').click();
+  await click(page, 'choose-role');
+  assert.equal((await state(page)).chapter, 0, 'a mission chosen from history starts at chapter one');
   await goto(page, index);
   assert.equal(await page.locator('.game-board').isVisible(), true);
   assert.equal((await state(page)).mode, 'character');
@@ -152,7 +164,7 @@ async function normalAnimation(page, data) {
       return;
     }
     if (process.argv.includes('--affected-layout')) {
-      for (const mobile of [false, true]) {
+      for (const mobile of (desktopOnly ? [false] : [false, true])) {
         const sample = active = await newPage(browser, mobile ? { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, reducedMotion: 'reduce' } : { viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' }, mobile ? 'affected-mobile' : 'affected-desktop');
         await open(sample); await choose(sample, 'margaret');
         const data = await sample.evaluate(() => window.BOOK_DATA);
@@ -197,9 +209,9 @@ async function normalAnimation(page, data) {
           assert.equal(await fixturePage.locator('.game-complete').count(), 0, 'layout fixture does not solve new activities');
           if (width === 390) await shot(fixturePage, '07-mobile-' + item.kind);
         }
-        await click(fixturePage, 'chronicle'); await fixturePage.locator('.chronicle-node[data-index="4"]').click();
+        await click(fixturePage, 'chronicle'); await fixturePage.locator('.history-year-index [data-action="chronicle-goto"][data-index="4"]').click();
         await noOverflow(fixturePage, width + 'px chronicle');
-        await readable(fixturePage, '.chronicle-event-content:not([hidden])>p', width + 'px chronicle');
+        await readable(fixturePage, '.history-reading-copy .history-paragraph', width + 'px chronicle');
         await shot(fixturePage, '08-chronicle-' + width);
         await click(fixturePage, 'font-size'); await noOverflow(fixturePage, width + 'px large chronicle'); await click(fixturePage, 'font-size');
       }
@@ -221,7 +233,7 @@ async function normalAnimation(page, data) {
       assert.equal(await animated.locator('.chapter-year').innerText(), '1461');
       await fitBook(animated, 'normal animated turn');
       await click(animated, 'chronicle'); await animated.locator('.page-turn').waitFor({ state: 'detached' });
-      await animated.locator('.chronicle-node[data-index="3"]').click(); await animated.locator('.page-turn').waitFor({ state: 'detached' });
+      await animated.locator('.history-year-index [data-action="chronicle-goto"][data-index="3"]').click(); await animated.locator('.page-turn').waitFor({ state: 'detached' });
       await fitBook(animated, '1366×768 chronicle'); await shot(animated, '06-chronicle-1366');
       const compact = active = await newPage(browser, { viewport: { width: 1366, height: 768 }, reducedMotion: 'reduce' }, 'compact-reserves', readingBookmark);
       await open(compact);
@@ -329,13 +341,13 @@ async function normalAnimation(page, data) {
     await open(chronicle, 'open-chronicle');
     assert.equal((await state(chronicle)).role, null);
     for (const index of [6, 0, 4, 3, 5, 1, 2]) {
-      await chronicle.locator('.chronicle-node[data-index="' + index + '"]').click();
+      await chronicle.locator('.history-year-index [data-action="chronicle-goto"][data-index="' + index + '"]').click();
       assert.equal((await state(chronicle)).chronicleIndex, index);
       assert.equal((await state(chronicle)).completed.length, 0);
       await fitBook(chronicle, 'chronicle/' + index);
     }
     assert.deepEqual((await state(chronicle)).chronicleRead, [0, 1, 2, 3, 4, 5, 6]);
-    await readable(chronicle, '.chronicle-event-content:not([hidden])>p', 'chronicle');
+    await readable(chronicle, '.history-reading-copy .history-paragraph', 'chronicle');
     assert.ok(await chronicle.locator('.art-reserve').count());
     await shot(chronicle, '06-chronicle-1366');
     await click(chronicle, 'font-size');
@@ -356,6 +368,9 @@ async function normalAnimation(page, data) {
     assert.equal((await state(chronicle)).mode, null); assert.deepEqual((await state(chronicle)).games, {});
     console.log('PASS free chronicle, illustration reserves, no game unlocks, larger-text recovery, sound and reset');
 
+    // Legacy responsive inspection; current single-leaf mobile coverage lives
+    // in mobile-reader.test.cjs / history-reader.test.cjs.
+    if (!desktopOnly) {
     // Reuse the untouched save produced by the real desktop playthrough for responsive inspection.
     const mobile = active = await newPage(browser, { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, reducedMotion: 'reduce' }, 'mobile', completedSave);
     await open(mobile);
@@ -368,9 +383,9 @@ async function normalAnimation(page, data) {
         if (width === 390) await shot(mobile, '07-mobile-' + item.kind);
       }
       await click(mobile, 'chronicle');
-      await mobile.locator('.chronicle-node[data-index="4"]').click();
+      await mobile.locator('.history-year-index [data-action="chronicle-goto"][data-index="4"]').click();
       await noOverflow(mobile, width + 'px chronicle');
-      await readable(mobile, '.chronicle-event-content:not([hidden])>p', width + 'px chronicle');
+      await readable(mobile, '.history-reading-copy .history-paragraph', width + 'px chronicle');
       await shot(mobile, '08-chronicle-' + width);
       await click(mobile, 'font-size'); await noOverflow(mobile, width + 'px large type'); await click(mobile, 'font-size');
     }
@@ -381,11 +396,12 @@ async function normalAnimation(page, data) {
     for (let index = 0; index <= letter.index; index++) { await solve(touch, letter.role, index, data.chapters); if (index < letter.index) await click(touch, 'next'); }
     await shot(touch, '09-touch-letter');
     console.log('PASS mobile 390px / 320px: twelve boards, natural page flow, no horizontal overflow, real touch secret letter');
+    }
 
     const animated = active = await newPage(browser, { viewport: { width: 1366, height: 768 }, reducedMotion: 'no-preference' }, 'animation');
     await normalAnimation(animated, data);
     assert.deepEqual(errors, []);
-    console.log('PASS ALL v4: 42 mixed activities, twelve mechanics, decision previews and confirmation, independent saves, chronology modes, complete desktop book frame, responsive layouts and normal animations.');
+    console.log(desktopOnly ? 'PASS DESKTOP: 42 mixed activities, twelve mechanics, decision previews and confirmation, independent saves, chronology modes, complete book frame and normal animations.' : 'PASS ALL v4: 42 mixed activities, twelve mechanics, decision previews and confirmation, independent saves, chronology modes, complete desktop book frame, responsive layouts and normal animations.');
   } catch (error) {
     console.error('Runtime errors:', errors);
     if (active && !active.isClosed()) await shot(active, 'failure').catch(() => {});

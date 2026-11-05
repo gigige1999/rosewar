@@ -8,9 +8,13 @@ window.MobileReader = (() => {
   let config, screen, book, nav, activePage, activeKey, activeIndex = -1;
   let cleanup = [], animations = [], ghost, pendingSnapshot, pendingScroll;
   let locked = false, releaseTimer, gesture, lastTouchTurn = -Infinity;
+  // A chapter change replaces this view synchronously. Keep its input guard
+  // outside release()/mount() so the second tap cannot act on the new chapter.
+  let navigationGuardUntil = -Infinity;
   const keyFor = (value, index = value.index) => `${value.key}:${index}`;
   const visiblePage = () => book?.querySelector('.page.mobile-leaf-active');
-  const canTurn = () => media.matches && config && !locked && (!config.canNavigate || config.canNavigate());
+  const guarded = () => performance.now() < navigationGuardUntil;
+  const canTurn = () => media.matches && config && !locked && !guarded() && (!config.canNavigate || config.canNavigate());
   function saveScroll() {
     const body = activePage?.querySelector('.leaf-content');
     if (body && activeKey != null) scrollPositions.set(`${activeKey}:${activeIndex}`, body.scrollTop);
@@ -63,7 +67,9 @@ window.MobileReader = (() => {
     const focused = nav.contains(document.activeElement) ? { index:document.activeElement.dataset.mobileIndex, action:document.activeElement.dataset.mobileAction } : null;
     nav.dataset.mobilePage = String(config.index);
     nav.setAttribute('aria-label', '书页翻阅');
-    nav.innerHTML = `<div class="mobile-page-tabs" role="group" aria-label="这一叠书页">${config.steps.map((step, index) => `<button type="button" data-mobile-index="${index}" aria-pressed="${index === config.index}"${index === config.index ? ' aria-current="page"' : ''}><i aria-hidden="true"></i><span>${escape(step.label)}</span></button>`).join('')}</div><div class="mobile-page-controls"><button type="button" class="mobile-page-previous${retreat ? ' mobile-page-retreat' : ''}" data-mobile-action="${retreat ? 'retreat' : 'previous'}" data-action="${retreat ? 'mobile-retreat' : 'mobile-previous'}" ${retreat ? config.retreatDisabled ? 'disabled' : '' : config.index === 0 ? 'disabled' : ''}><span aria-hidden="true">←</span> ${escape(retreat ? config.retreatLabel : '前一页')}</button><span class="mobile-page-position" aria-live="off">${config.index + 1}<i>/</i>${config.steps.length}</span><button type="button" class="mobile-page-next${advance ? ' mobile-page-advance' : ''}" data-mobile-action="${advance ? 'advance' : 'next'}" data-action="${advance ? 'mobile-advance' : 'mobile-next'}" ${advance ? config.advanceDisabled ? 'disabled' : '' : last ? 'disabled' : ''}>${escape(advance ? config.advanceLabel : '后一页')} <span aria-hidden="true">→</span></button></div>`;
+    const context = config.contextLabel || config.onBack || config.onChapterPrevious || config.onChapterNext
+      ? `<div class="mobile-reader-context" aria-label="阅读位置与返回">${config.onBack ? `<button type="button" class="mobile-reader-back" data-mobile-action="back" aria-label="${escape(config.backLabel || '返回上一级')}" ${config.backDisabled ? 'disabled' : ''}><span aria-hidden="true">↶</span>${escape(config.backLabel || '返回')}</button>` : ''}<span class="mobile-reader-context-label" title="${escape(config.contextLabel || '')}">${escape(config.contextLabel || '')}</span>${config.onChapterPrevious || config.onChapterNext ? `<div class="mobile-chapter-controls" role="group" aria-label="章节切换">${config.onChapterPrevious ? `<button type="button" data-mobile-action="chapter-previous" aria-label="${escape(config.chapterPreviousLabel || '返回上一章')}" ${config.chapterPreviousDisabled ? 'disabled' : ''}>${escape(config.chapterPreviousLabel || '上一章')}</button>` : ''}${config.onChapterNext ? `<button type="button" data-mobile-action="chapter-next" aria-label="${escape(config.chapterNextLabel || '前往下一章')}" ${config.chapterNextDisabled ? 'disabled' : ''}>${escape(config.chapterNextLabel || '下一章')}</button>` : ''}</div>` : ''}</div>` : '';
+    nav.innerHTML = `${context}<div class="mobile-page-tabs" role="group" aria-label="这一叠书页">${config.steps.map((step, index) => `<button type="button" data-mobile-index="${index}" aria-pressed="${index === config.index}"${index === config.index ? ' aria-current="page"' : ''}><i aria-hidden="true"></i><span>${escape(step.label)}</span></button>`).join('')}</div><div class="mobile-page-controls"><button type="button" class="mobile-page-previous${retreat ? ' mobile-page-retreat' : ''}" data-mobile-action="${retreat ? 'retreat' : 'previous'}" data-action="${retreat ? 'mobile-retreat' : 'mobile-previous'}" ${retreat ? config.retreatDisabled ? 'disabled' : '' : config.index === 0 ? 'disabled' : ''}><span aria-hidden="true">←</span> ${escape(retreat ? config.retreatLabel : '前一页')}</button><span class="mobile-page-position" aria-live="off">${config.index + 1}<i>/</i>${config.steps.length}</span><button type="button" class="mobile-page-next${advance ? ' mobile-page-advance' : ''}" data-mobile-action="${advance ? 'advance' : 'next'}" data-action="${advance ? 'mobile-advance' : 'mobile-next'}" ${advance ? config.advanceDisabled ? 'disabled' : '' : last ? 'disabled' : ''}>${escape(advance ? config.advanceLabel : '后一页')} <span aria-hidden="true">→</span></button></div>`;
     if (focused) {
       const restored = focused.index != null ? nav.querySelector(`[data-mobile-index="${focused.index}"]`) : nav.querySelector(`[data-mobile-action="${focused.action}"]`);
       (restored && !restored.disabled ? restored : nav.querySelector('[aria-current="page"]'))?.focus({preventScroll:true});
@@ -111,22 +117,39 @@ window.MobileReader = (() => {
     pendingSnapshot = null; pendingScroll = null;
     if (previousConfig && changed) screen.dispatchEvent(new CustomEvent('mobilepagechange', { detail:{ index:config.index, side:config.steps[config.index].side } }));
   }
+  function invoke(callback, disabled) {
+    if (!canTurn() || typeof callback !== 'function' || disabled) return false;
+    saveScroll();
+    navigationGuardUntil = performance.now() + (reduced.matches ? 130 : 340);
+    callback();
+    return true;
+  }
   function request(index, advance = false, retreat = false) {
-    if (!canTurn()) return;
+    if (!canTurn()) return false;
     if (retreat) {
-      if (!config.onRetreat || config.retreatDisabled) return;
-      saveScroll(); config.onRetreat(); return;
+      return invoke(config.onRetreat, config.retreatDisabled);
     }
     if (advance) {
-      if (!config.onAdvance || config.advanceDisabled) return;
-      saveScroll(); config.onAdvance(); return;
+      return invoke(config.onAdvance, config.advanceDisabled);
     }
-    if (!Number.isInteger(index) || index < 0 || index >= config.steps.length || index === config.index) return;
+    if (!Number.isInteger(index) || index < 0 || index >= config.steps.length || index === config.index) return false;
     saveScroll();
     pendingScroll = true; pendingSnapshot = snapshot(activePage);
+    navigationGuardUntil = performance.now() + (reduced.matches ? 130 : 340);
     config.onNavigate(index);
     // A refused route must not leave a detached visual snapshot behind.
     pendingSnapshot = null; pendingScroll = null;
+    return true;
+  }
+  function move(direction) {
+    if (!canTurn() || ![-1, 1].includes(direction)) return false;
+    const next = config.index + direction;
+    if (next < 0) return config.swipeRetreat === true ? request(config.index, false, true) : false;
+    if (next >= config.steps.length) return config.swipeAdvance === true ? request(config.index, true) : false;
+    return request(next);
+  }
+  function back() {
+    return config ? invoke(config.onBack, config.backDisabled) : false;
   }
   function onNavClick(event) {
     const button = event.target.closest('button');
@@ -137,11 +160,19 @@ window.MobileReader = (() => {
     else if (button.dataset.mobileAction === 'next') request(config.index + 1);
     else if (button.dataset.mobileAction === 'advance') request(config.index, true);
     else if (button.dataset.mobileAction === 'retreat') request(config.index, false, true);
+    else if (button.dataset.mobileAction === 'back') back();
+    else if (button.dataset.mobileAction === 'chapter-previous') invoke(config.onChapterPrevious, config.chapterPreviousDisabled);
+    else if (button.dataset.mobileAction === 'chapter-next') invoke(config.onChapterNext, config.chapterNextDisabled);
   }
-  const ignored = 'button,a,input,textarea,select,summary,[contenteditable="true"],[draggable="true"],.game-board,.game-panel,.mobile-reader-nav';
+  const ignored = 'button,a,input,textarea,select,summary,[contenteditable="true"],[draggable="true"],.mobile-reader-nav,.history-atlas-map,.atlas-map,[data-no-page-swipe]';
+  const readableGameText = '.ma-inner-voice,.ma-decision-outcome,.ma-history-note,.ma-inline-note,.ma-answer-note';
+  function ignoresGesture(target) {
+    if (target.closest(ignored)) return true;
+    return Boolean(target.closest('.game-board') && !target.closest(readableGameText));
+  }
   function touchStart(event) {
     gesture = null;
-    if (!canTurn() || event.touches.length !== 1 || event.target.closest(ignored)) return;
+    if (!canTurn() || event.touches.length !== 1 || ignoresGesture(event.target)) return;
     const point = event.touches[0];
     // Leave the browser's edge-back gesture untouched.
     if (point.clientX < 20 || point.clientX > innerWidth - 20) return;
@@ -163,10 +194,10 @@ window.MobileReader = (() => {
     if (point) { movement.dx = point.clientX - movement.x; movement.dy = point.clientY - movement.y; }
     if (movement.axis === 'y' || performance.now() - movement.at > 950 || Math.abs(movement.dx) < 54 || Math.abs(movement.dx) <= Math.abs(movement.dy) * 1.7) return;
     if (!canTurn()) return;
-    const next = config.index + (movement.dx < 0 ? 1 : -1);
-    if (next < 0 || next >= config.steps.length) return;
-    if (event.cancelable) event.preventDefault();
-    lastTouchTurn = performance.now(); request(next);
+    if (move(movement.dx < 0 ? 1 : -1)) {
+      if (event.cancelable) event.preventDefault();
+      lastTouchTurn = performance.now();
+    }
   }
   function cancelTouch() { gesture = null; }
   function suppressClick(event) {
@@ -246,5 +277,5 @@ window.MobileReader = (() => {
     scrollPositions.clear();
     const body = activePage?.querySelector('.leaf-content'); if (body) body.scrollTop = 0;
   }
-  return { mount, sync, release, show, remember, enter, clearPositions, isMobile:() => media.matches, isTurning:() => locked };
+  return { mount, sync, release, show, remember, enter, clearPositions, move, back, isMobile:() => media.matches, isTurning:() => locked || guarded() };
 })();

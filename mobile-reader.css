@@ -47,6 +47,16 @@
   .mobile-reader-screen .mobile-bookmark{display:flex;align-items:center;justify-content:center;width:100%;min-height:44px;line-height:1.7;font-size:14px;color:var(--red);letter-spacing:.04em}
   .mobile-reader-nav{display:flex;flex-direction:column;width:min(510px,100%);gap:3px;padding-top:2px;min-height:0;position:relative;z-index:6}
   .mobile-reader-nav[hidden]{display:none}
+  .mobile-reader-context{display:flex;align-items:center;gap:6px;width:100%;min-height:44px;border-bottom:1px solid #997b4a35}
+  .mobile-reader-context button{display:inline-flex;align-items:center;justify-content:center;gap:4px;min-height:44px;min-width:44px;padding:5px 3px;font-size:12px;line-height:1.6;color:var(--red);flex-shrink:0}
+  .mobile-reader-context button:disabled{color:#8b7351;opacity:.38}
+  .mobile-reader-context button:not(:disabled):active{background:#9b78481c}
+  .mobile-reader-context-label{flex:1;min-width:0;color:#896b48;font-size:11px;line-height:1.8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mobile-reader-context .mobile-reader-back{max-width:110px;text-align:left}
+  .mobile-reader-back>span{font-size:17px;line-height:1}
+  .mobile-chapter-controls{display:flex;align-items:center;gap:7px;flex-shrink:0}
+  .mobile-chapter-controls button+button{position:relative;margin-left:4px}
+  .mobile-chapter-controls button+button::before{content:'';position:absolute;left:-6px;top:14px;bottom:14px;border-left:1px solid #997b4a35}
   .mobile-page-tabs{display:flex;align-items:stretch;justify-content:center;gap:4px;width:100%;border-bottom:1px solid #997b4a35}
   .mobile-page-tabs button{display:flex;align-items:center;justify-content:center;gap:6px;flex:1;min-width:0;min-height:44px;padding:4px 2px;font-size:11px;line-height:1.6;letter-spacing:.02em;color:#8b7351;border-bottom:1px solid transparent}
   .mobile-page-tabs button span{overflow-wrap:anywhere}
@@ -134,6 +144,9 @@
   .mobile-reader-screen .toolbar{gap:6px}
   .mobile-reader-screen .mobile-tools-button{font-size:12px;min-width:43px}
   .mobile-page-tabs{gap:2px}
+  .mobile-reader-context{gap:4px}
+  .mobile-reader-context button{font-size:11px;padding-left:2px;padding-right:2px}
+  .mobile-chapter-controls{gap:3px}
   .mobile-page-tabs button{font-size:10px;gap:4px}
   .mobile-page-controls button{font-size:13px;gap:6px;padding-left:3px;padding-right:3px}
   .mobile-reader-screen .role-portrait-heading{grid-template-columns:99px minmax(0,1fr);gap:12px}

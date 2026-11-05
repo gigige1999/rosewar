@@ -6,7 +6,7 @@
       version: 4, role: null, chapter: 0, completed: [], selections: {},
       legacyCompleted: [], legacyGames: {}, legacyChoices: {}, ending: false, sound: false, mode: null,
       chronicleIndex: 0, chronicleRead: [], fontSize: 'standard', coverLanguage: 'zh', games: {}, storyPages: {},
-      readingSides: {}, chronicleSide: 'illustration'
+      readingSides: {}, chronicleSide: 'illustration', chroniclePages: {}, replayEvidence: {}
     };
   }
   function record(value) { return value !== null && typeof value === 'object' && !Array.isArray(value); }
@@ -42,6 +42,17 @@
     setChronicleSide(side) {
       if (this.state.mode !== 'chronicle' || !['illustration', 'timeline'].includes(side)) return false;
       this.state.chronicleSide = side;
+      return true;
+    }
+    chroniclePageCount(index = this.state.chronicleIndex) {
+      return root.BOOK_HISTORY?.milestones?.[index]?.pages?.length || 3;
+    }
+    get chroniclePage() {
+      return this.state.chroniclePages[this.state.chronicleIndex] || 0;
+    }
+    setChroniclePage(page) {
+      if (this.state.mode !== 'chronicle' || !Number.isInteger(page) || page < 0 || page >= this.chroniclePageCount()) return false;
+      this.state.chroniclePages[this.state.chronicleIndex] = page;
       return true;
     }
     storyPageCount(roleId = this.state.role, index = this.state.chapter) {
@@ -93,6 +104,13 @@
       const state = chapter && this.state.legacyGames[roleId]?.[chapter.id];
       if (!state || !root.HeraldicGames) return false;
       try { return root.HeraldicGames.isSolved(roleId, index, copy(state)) === true; }
+      catch (_) { return false; }
+    }
+    _replaySolved(roleId, index) {
+      const chapter = this.data.chapters[index];
+      const state = chapter && this.state.replayEvidence[roleId]?.[chapter.id];
+      if (!state || !root.RoleGames) return false;
+      try { return root.RoleGames.isSolved(roleId, index, copy(state)) === true; }
       catch (_) { return false; }
     }
     _restoreLegacyChoices(raw, fromGames = false) {
@@ -147,6 +165,10 @@
       this.state.fontSize = saved.fontSize === 'large' ? 'large' : 'standard';
       this.state.coverLanguage = saved.coverLanguage === 'en' ? 'en' : 'zh';
       this.state.chronicleSide = saved.chronicleSide === 'timeline' ? 'timeline' : 'illustration';
+      if (record(saved.chroniclePages)) this.data.chapters.forEach((chapter, index) => {
+        const page = saved.chroniclePages[index];
+        if (Number.isInteger(page) && page >= 0 && page < this.chroniclePageCount(index)) this.state.chroniclePages[index] = page;
+      });
       if (record(saved.readingSides)) this.data.roles.forEach(role => {
         if (!record(saved.readingSides[role.id])) return;
         this.data.chapters.forEach(chapter => {
@@ -182,6 +204,7 @@
           this._restoreLegacyChoices(saved.legacyChoices);
           if (saved.version === 3) this._restoreLegacyChoices(saved.games, true);
         }
+        if (saved.version === 4) this._restoreGames(saved.replayEvidence, this.state.replayEvidence, root.RoleGames, true);
       }
       const rawSelections = record(saved.selections) ? saved.selections : {};
       const legacy = saved.version === 1 ? saved.completed : saved.legacyCompleted;
@@ -199,7 +222,7 @@
       for (let index = 0; index < this.data.chapters.length; index++) {
         const chapter = this.data.chapters[index];
         const proven = this.state.legacyCompleted.includes(chapter.id)
-          || this.data.roles.some(role => this._solved(role.id, index) || this._legacySolved(role.id, index)
+          || this.data.roles.some(role => this._solved(role.id, index) || this._replaySolved(role.id, index) || this._legacySolved(role.id, index)
             || this.state.legacyChoices[role.id]?.[chapter.id]);
         if (!proven) break;
         this.state.completed.push(chapter.id);
@@ -222,6 +245,19 @@
       this.state.ending = false;
       return true;
     }
+    revisitActivity() {
+      if (!this.role || !this.chapter || this.state.mode !== 'character'
+          || !this.isUnlocked(this.state.chapter) || !this.isComplete()) return false;
+      const role = this.state.role, chapter = this.chapter.id;
+      const completed = root.RoleGames.sanitize(role, this.state.chapter, this.game);
+      // Keep one validated completion as reading evidence. It does not count as
+      // the current decision: this page must be played and confirmed again.
+      this.state.replayEvidence[role] ||= {};
+      this.state.replayEvidence[role][chapter] = copy(completed);
+      this.state.games[role][chapter] = copy(root.RoleGames.initial(role, this.state.chapter));
+      this.state.ending = false;
+      return true;
+    }
     actGame(action, payload) {
       const current = this.game;
       if (!this.role || !this.chapter || this.state.mode !== 'character' || !this.isUnlocked(this.state.chapter) || !root.RoleGames) {
@@ -231,7 +267,12 @@
       if (!result || !record(result.state)) return { state: current, changed: false, message: '这一笔尚未留下痕迹。' };
       const clean = root.RoleGames.sanitize(this.state.role, this.state.chapter, result.state);
       this.state.games[this.state.role][this.chapter.id] = copy(clean);
-      if (this.isComplete() && !this.state.completed.includes(this.chapter.id)) this.state.completed.push(this.chapter.id);
+      if (this.isComplete()) {
+        if (!this.state.completed.includes(this.chapter.id)) this.state.completed.push(this.chapter.id);
+        if (this.state.replayEvidence[this.state.role]?.[this.chapter.id]) {
+          this.state.replayEvidence[this.state.role][this.chapter.id] = copy(clean);
+        }
+      }
       this.state.ending = false;
       return { state: this.game, changed: result.changed === true, message: typeof result.message === 'string' ? result.message : '' };
     }

@@ -1,4 +1,7 @@
-/* A focused visual regression in an isolated browser; never alters reader saves. */
+/* A focused visual regression in an isolated browser; never alters reader saves.
+ * Use --desktop-only for the current desktop cover/portrait check. The legacy
+ * mobile branch predates single-leaf paging; see mobile-reader.test.cjs instead.
+ */
 const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -7,6 +10,7 @@ const { pathToFileURL } = require('node:url');
 const root = path.resolve(__dirname, '..');
 const output = path.join(root, 'output', 'cover-portrait-review');
 const storageKey = 'wars-of-the-roses-manuscript-v1';
+const desktopOnly = process.argv.includes('--desktop-only');
 fs.mkdirSync(output, { recursive: true });
 
 (async () => {
@@ -40,7 +44,7 @@ fs.mkdirSync(output, { recursive: true });
     const open = async action => {
       await click('open-book');
       await page.locator('.routes-book').waitFor();
-      if (action === 'open-chronicle') await page.locator('.routes-book [data-action="chronicle"]').click();
+      if (action === 'open-chronicle') await page.locator('.history-milestones [data-action="chronicle-goto"][data-index="0"]').click();
     };
     await page.goto(pathToFileURL(path.join(root, 'index.html')).href);
     assert.equal(await page.locator('.cover-title').innerText(), '玫瑰战争');
@@ -60,7 +64,8 @@ fs.mkdirSync(output, { recursive: true });
     console.log('PASS minimal Chinese/English cover, language persistence');
 
     await open('open-book');
-    assert.match(await page.locator('.route-heading').first().innerText(), /走进一个人/);
+    assert.match(await page.locator('.history-introduction h1').innerText(), /为什么叫作玫瑰战争/);
+    assert.equal(await page.locator('.history-milestones [data-action="chronicle-goto"]').count(), 7);
     assert.equal(await page.locator('html').getAttribute('lang'), 'zh-CN', 'only the cover changes language');
     await click('roles');
     const roles = await page.evaluate(() => window.BOOK_DATA.roles.map(role => ({ id: role.id, name: role.name })));
@@ -87,6 +92,12 @@ fs.mkdirSync(output, { recursive: true });
     await page.reload();
     assert.equal(await page.locator('.cover-screen').getAttribute('lang'), 'zh-CN');
 
+    if (desktopOnly) {
+      assert.deepEqual(errors, []);
+      fs.writeFileSync(path.join(output, 'desktop-report.json'), JSON.stringify({ errors, measurements }, null, 2));
+      console.log('PASS desktop Chinese/English cover, persistence, historical introduction and six complete portraits; 0 runtime errors.');
+      return;
+    }
     await page.setViewportSize({ width: 320, height: 740 });
     await page.locator('[data-action="cover-language"][data-language="en"]').click();
     await noOverflow(); await screenshot('cover-en-mobile');

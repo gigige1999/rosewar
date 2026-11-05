@@ -9,8 +9,8 @@ const { pathToFileURL } = require('node:url');
 const { loadGames, solveActions } = require('./activities.test.cjs');
 const games = loadGames();
 const root = path.resolve(__dirname,'..');
-const output = path.join(root,'output','mobile-review');
-const url = pathToFileURL(path.join(root,'index.html')).href;
+const output = process.env.BOOK_TEST_OUTPUT || path.join(root,'output','mobile-review');
+const url = process.env.BOOK_ENTRY_URL || pathToFileURL(path.join(root,'index.html')).href;
 const storageKey = 'wars-of-the-roses-manuscript-v1';
 const errors=[], measurements=[];
 let fixtureId=0;
@@ -27,6 +27,11 @@ async function action(page,name,scope='') {
     control=page.locator('[data-action="'+name+'"]:visible').first();
   }
   await control.click();
+  await page.locator('.page-turn').waitFor({state:'detached'});
+  await settle(page);
+}
+async function mobileAction(page,name) {
+  await page.locator('.mobile-reader-nav [data-mobile-action="'+name+'"]').click();
   await page.locator('.page-turn').waitFor({state:'detached'});
   await settle(page);
 }
@@ -118,7 +123,10 @@ async function touch(page,client,selector,dx,dy=0,cancel=false) {
   await target.scrollIntoViewIfNeeded();await settle(page);
   const r=await target.boundingBox();
   assert.ok(r&&r.width&&r.height,'gesture target is visible: '+selector);
-  const x=r.x+r.width*(dx<0?.76:.24),y=Math.min(page.viewportSize().height-135,Math.max(r.y+Math.min(r.height/2,45),120));
+  const leaf=await target.locator('xpath=ancestor-or-self::*[contains(concat(" ",normalize-space(@class)," ")," leaf-content ")][1]').boundingBox();
+  const top=Math.max(r.y,leaf.y),bottom=Math.min(r.y+r.height,leaf.y+leaf.height);
+  assert.ok(bottom>top,'gesture target intersects active reading area: '+selector);
+  const x=r.x+r.width*(dx<0?.76:.24),y=top+Math.min((bottom-top)/2,45);
   await client.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});
   for(let i=1;i<=6;i++){
     await client.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:x+dx*i/6,y:y+dy*i/6}]});
@@ -131,6 +139,14 @@ async function shot(page,name){await page.screenshot({path:path.join(output,name
 async function freshPage(browser,{width=390,height=844,motion='reduce'}={}) {
   const page=await browser.newPage({viewport:{width,height},isMobile:true,hasTouch:true,deviceScaleFactor:1,reducedMotion:motion});
   page.setDefaultTimeout(12000);page.on('pageerror',error=>errors.push(error.message));
+  if(process.env.BOOK_ENTRY_URL){
+    page.on('console',message=>{if(message.type()==='error')errors.push(message.text());});
+    await page.route('**/*',route=>{
+      const request=route.request().url();
+      if(request.startsWith(new URL(url).origin+'/'))return route.continue();
+      errors.push('Unexpected network resource: '+request);return route.abort();
+    });
+  }
   await page.goto(url);return page;
 }
 
@@ -156,8 +172,16 @@ async function freshPage(browser,{width=390,height=844,motion='reduce'}={}) {
       await step(page,2);await settle(page,450);
       await page.locator('.mobile-reader-nav [data-mobile-index="2"]').focus();
       await page.keyboard.press('ArrowRight');await page.keyboard.press('ArrowRight');await settle(page,450);
-      assert.equal((await state(page)).chapter,0,'final leaf arrows cannot activate next chapter implicitly');
+      assert.equal((await state(page)).chapter,1,'completed final leaf advances exactly one chapter on rapid arrows');
+      assert.equal(await mobileIndex(page),0,'cross-chapter keyboard turn begins at the first story leaf');
+      await step(page,2);await settle(page,450);
+      await page.locator('[data-mobile-action="chapter-previous"]').dispatchEvent('click');
+      await page.locator('[data-mobile-action="chapter-previous"]').dispatchEvent('click');
+      await settle(page,450);
+      assert.equal((await state(page)).chapter,0,'rapid persistent previous-chapter controls return exactly one chapter');
+      assert.equal(await mobileIndex(page),0);
       await action(page,'genealogy');await settle(page,450);
+      await page.locator('[data-action="genealogy-mode"][data-mode="detail"]').click();await settle(page,450);
       const sheetBefore=await page.locator('.genealogy-tabs [aria-pressed="true"]').getAttribute('data-index');
       await page.locator('.genealogy-map-page .leaf-content').focus();
       await page.keyboard.press('ArrowRight');await page.keyboard.press('ArrowRight');await settle(page,450);
@@ -190,11 +214,14 @@ async function freshPage(browser,{width=390,height=844,motion='reduce'}={}) {
     }
     await openDirectory(page);await frame(page,'390 directory');await shot(page,'directory-390');
     const initial=await state(page);
-    // A second directory leaf is discoverable without scrolling through the first.
-    await step(page,1);await frame(page,'390 panorama directory');
-    assert.equal(await page.locator('.routes-book [data-action="chronicle"]').isVisible(),true);
+    assert.equal(await page.locator('.routes-book .left-page [data-action="chronicle-goto"]').count(),7,'opening leaf introduces all seven historical milestones');
+    assert.match(await page.locator('.routes-book .left-page').innerText(),/玫瑰战争/,'opening explains the historical name before character selection');
+    // The map and optional character missions are one leaf away from history.
+    await step(page,1);await frame(page,'390 map and missions directory');
+    assert.equal(await page.locator('.routes-book .history-atlas').isVisible(),true);
+    assert.equal(await page.locator('.routes-book [data-action="mission-role"]').count(),6);
     await step(page,0);assert.deepEqual(await state(page),initial,'turning contents does not alter a bookmark');
-    console.log('PASS mobile contents fit the viewport and both reading routes are one turn away');
+    console.log('PASS history-first contents, seven milestones, map and six missions fit the mobile viewport');
 
     await fixture(page,await manuscript(page,'edward',0));await openDirectory(page);await action(page,'resume-bookmark');
     await page.locator('.reading-book').waitFor();
@@ -239,7 +266,36 @@ async function freshPage(browser,{width=390,height=844,motion='reduce'}={}) {
     await step(page,2);
     await touch(page,client,'.game-board',125,0);
     assert.equal(await mobileIndex(page),2,'game drag is not a page turn');
-    console.log('PASS horizontal touch turns, reverse turns, vertical scrolling, cancellation and game gesture exclusion');
+    await touch(page,client,'.game-stakes',125,0);
+    assert.equal(await mobileIndex(page),1,'readable game instructions can swipe back to the story');
+    await step(page,2);
+    await touch(page,client,'.ma-inner-voice',125,0);
+    assert.equal(await mobileIndex(page),1,'readable character response can swipe back even inside a game board');
+    await step(page,2);
+    await touch(page,client,'.game-stakes',-125,0);
+    assert.equal((await state(page)).chapter,0,'unconfirmed choice cannot swipe into the next chapter');
+    assert.equal(await mobileIndex(page),2);
+    console.log('PASS horizontal touch turns, vertical scrolling, cancellation, game exclusion and readable game text swipes');
+
+    const beforeDetour=await state(page);
+    await action(page,'genealogy');
+    await page.locator('.genealogy-person:visible').first().click();await settle(page);
+    assert.equal(await mobileIndex(page),1);
+    await mobileAction(page,'back');
+    assert.equal(await mobileIndex(page),0,'back from a family member first returns to the relationship tree');
+    await mobileAction(page,'back');
+    assert.equal(await page.locator('.reading-book').count(),1,'back from the family tree returns to the originating character');
+    assert.equal(await mobileIndex(page),2,'return restores the originating interaction leaf');
+    assert.deepEqual((await state(page)).games,beforeDetour.games,'family detour preserves unconfirmed decisions');
+    await action(page,'chronicle');
+    assert.equal(await page.locator('.chronicle-book').count(),1);
+    await step(page,2);
+    await mobileAction(page,'back');
+    assert.equal(await page.locator('.reading-book').count(),1,'historical detour returns to the character view');
+    assert.equal(await mobileIndex(page),2);
+    assert.equal((await state(page)).mode,'character');
+    assert.deepEqual((await state(page)).games,beforeDetour.games,'history detour preserves character activities');
+    console.log('PASS nested family back and history back restore the character, active page and decisions');
 
     // Further route/portrait, miniature completion and responsive checks are
     // deliberately kept in this same browser process to avoid timing contention.
@@ -251,8 +307,17 @@ async function freshPage(browser,{width=390,height=844,motion='reduce'}={}) {
       await settle(page,50);
     }
     assert.equal(await page.locator('.game-complete').count(),1,'miniature remains playable within single page');
-    await action(page,'next','.story-revelation ');
-    assert.equal((await state(page)).chapter,1);assert.equal(await mobileIndex(page),0,'new chapter opens its first story leaf');
+    await touch(page,client,'.game-stakes',-125,0);
+    assert.equal((await state(page)).chapter,1);assert.equal(await mobileIndex(page),0,'completed interaction swipes forward into the first leaf of the next chapter');
+    await step(page,2);
+    assert.equal(await page.locator('[data-mobile-action="chapter-previous"]').isVisible(),true,'previous chapter remains visible on the interaction leaf');
+    await mobileAction(page,'chapter-previous');
+    assert.equal((await state(page)).chapter,0);assert.equal(await mobileIndex(page),0,'persistent previous chapter returns directly to story start');
+    await mobileAction(page,'chapter-next');
+    assert.equal((await state(page)).chapter,1);
+    await touch(page,client,'.story-paragraph',125,0);
+    assert.equal((await state(page)).chapter,0,'reverse swipe on a chapter opening returns to the previous chapter');
+    assert.equal(await mobileIndex(page),0);
 
     for(const [width,height,font]of [[390,844,'standard'],[320,568,'large'],[430,932,'large']]){
       await page.setViewportSize({width,height});
@@ -266,17 +331,40 @@ async function freshPage(browser,{width=390,height=844,motion='reduce'}={}) {
     console.log('PASS playable miniature, next chapter, 390/320-short/430 viewport and large text final lines');
 
     await page.setViewportSize({width:390,height:844});
-    await action(page,'chronicle');
-    assert.equal(await mobileIndex(page),0,'panorama starts with its painting leaf');
-    await frame(page,'chronicle illustration');await step(page,1);
-    await page.locator('[data-action="chronicle-goto"][data-index="4"]').click();await settle(page);
-    await step(page,1);
-    await tail(page,'.chronicle-event.is-current .chronicle-consequence p','chronicle timeline final line');
+    await action(page,'routes');
+    await page.locator('.routes-book [data-action="chronicle-goto"][data-index="4"]').click();await settle(page);
+    assert.equal(await mobileIndex(page),0,'a milestone opens on its first detailed story leaf');
+    assert.equal((await state(page)).chronicleIndex,4);
+    for(const index of [0,1,2]){
+      await step(page,index);await frame(page,'chronicle detailed text '+index);
+      assert.equal(await page.locator('.history-reading-copy p').count(),3,'each historical leaf contains three readable narrative paragraphs');
+      await tail(page,'.history-reading-copy p','chronicle detailed text final line '+index);
+    }
     const chronicle=await state(page);
     await page.reload();await openDirectory(page);await action(page,'resume-bookmark');
-    assert.equal(await mobileIndex(page),1,'panorama refresh restores timeline leaf');
+    assert.equal(await mobileIndex(page),2,'historical refresh restores the third detailed text leaf');
     assert.equal((await state(page)).chronicleIndex,4);
-    assert.deepEqual((await state(page)).games,chronicle.games,'panorama detour preserves character activities');
+    assert.deepEqual((await state(page)).games,chronicle.games,'historical reading preserves character activities');
+    await step(page,3);await frame(page,'chronicle interactive map');
+    await touch(page,client,'.atlas-map',-125,0);
+    assert.equal(await mobileIndex(page),3,'interacting with the map does not turn the page');
+    assert.equal((await state(page)).chronicleIndex,4);
+    const place=page.locator('.atlas-place-list [data-action="atlas-place"]').first();
+    const placeId=await place.getAttribute('data-place');
+    await place.click();await settle(page);
+    assert.equal(await page.locator('.atlas-place-list [data-place="'+placeId+'"]').getAttribute('aria-pressed'),'true');
+    await tail(page,'.atlas-place-detail .atlas-prose p','selected place final line');
+    await page.reload();await openDirectory(page);await action(page,'resume-bookmark');
+    assert.equal(await mobileIndex(page),3,'historical refresh restores the map leaf');
+    await touch(page,client,'.atlas-instruction',-125,0);
+    assert.equal((await state(page)).chronicleIndex,5,'readable map introduction swipes to the next milestone');
+    assert.equal(await mobileIndex(page),0);
+    await touch(page,client,'.history-reading-copy p',125,0);
+    assert.equal((await state(page)).chronicleIndex,4,'reverse swipe on history opening returns to previous milestone');
+    assert.equal(await mobileIndex(page),0);
+    await mobileAction(page,'chapter-previous');
+    assert.equal((await state(page)).chronicleIndex,3,'previous milestone is always directly available');
+    await shot(page,'history-390');
 
     await action(page,'genealogy');await frame(page,'genealogy tree');
     const beforeFamily=await state(page);
@@ -286,6 +374,7 @@ async function freshPage(browser,{width=390,height=844,motion='reduce'}={}) {
     await tail(page,'.genealogy-detail p','genealogy description final line');
     await action(page,'genealogy-return-tree');assert.equal(await mobileIndex(page),0);
     assert.deepEqual(await state(page),beforeFamily,'family lookup and return leave reading bookmark untouched');
+    await page.locator('[data-action="genealogy-mode"][data-mode="detail"]').click();await settle(page);
     await page.locator('[data-action="genealogy-sheet"][data-index="2"]').click();await settle(page);
     await page.locator('.genealogy-person[data-person="edward4"]:visible').first().click();await settle(page);
     await action(page,'genealogy-role');
@@ -304,7 +393,19 @@ async function freshPage(browser,{width=390,height=844,motion='reduce'}={}) {
     await page.locator('.mobile-reader-nav [data-mobile-action="advance"]').click();await settle(page);
     assert.equal((await state(page)).role,'richard');assert.equal((await state(page)).chapter,0,'new protagonist begins at chapter one');
     assert.equal(await mobileIndex(page),0);
-    console.log('PASS panorama two leaves and refresh, family lookup/return, three biography leaves and new character entry');
+    console.log('PASS three detailed history leaves plus map, saved location, milestone swipe/back, family lookup and character entry');
+
+    await fixture(page,await manuscript(page,'richard',4));await openDirectory(page);
+    await page.locator('.routes-book [data-action="chronicle-goto"][data-index="6"]').click();await settle(page);
+    await step(page,3);
+    await action(page,'roles','.history-mission-invitation ');
+    await page.locator('[data-action="preview-role"][data-role="richard"]:visible').click();await settle(page);
+    assert.equal(await mobileIndex(page),1,'historical mission entry opens the selected character introduction');
+    await step(page,3);await mobileAction(page,'advance');
+    assert.equal((await state(page)).role,'richard');
+    assert.equal((await state(page)).chapter,0,'choosing a mission replays the same existing character from the start');
+    assert.equal(await mobileIndex(page),0);
+    console.log('PASS final historical milestone offers a mission that replays the character from chapter one');
 
     await page.setViewportSize({width:1366,height:768});await settle(page);
     assert.deepEqual(await visibleSide(page),['left','right'],'desktop restores both leaves');
